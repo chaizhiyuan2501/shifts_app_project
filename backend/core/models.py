@@ -53,6 +53,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.name
 
 
+
 class Staff(models.Model):
     pass
 
