@@ -1,9 +1,20 @@
+﻿"""
+データベースモデル
+"""
+
+from django.db import models
+import uuid
+import os
+
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
+
+from utils.db import BaseModel
 
 
 class UserManager(BaseUserManager):
@@ -34,16 +45,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     """ユーザーモデル"""
 
     name = models.CharField(max_length=255, blank=False, verbose_name="ユーザーネーム")
-    # avatar=models.ImageField(upload_to=avatar_image_file_path,null=True,blank=True,verbose_name="アバター")
     email = models.EmailField(
         max_length=255, unique=True, verbose_name="メールアドレス"
     )
     is_active = models.BooleanField(default=True, verbose_name="ユーザーの有効状態")
-    is_staff = models.BooleanField(default=False, verbose_name="スタッフ権限")
+    role = models.CharField(max_length=50)
+    is_admin = models.BooleanField(default=False, verbose_name="管理者の状態")
 
     objects = UserManager()
 
-    USERNAME_FIELD = "email"  # ユーザーを一意に識別するフィールドの指定
+    USERNAME_FIELD = "name"  # ユーザーを一意に識別するフィールドの指定
 
     class Meta:
         db_table = "User"
@@ -51,20 +62,3 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __srt__(self):
         return self.name
-
-
-
-class Staff(models.Model):
-    pass
-
-
-class Guest(models.Model):
-    pass
-
-
-class StaffSchedule(models.Model):
-    pass
-
-
-class GuestSchedule(models.Model):
-    pass
