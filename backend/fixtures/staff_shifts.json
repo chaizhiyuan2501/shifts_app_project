@@ -1,0 +1,38 @@
+﻿[
+    {
+        "model": "staff.shift",
+        "pk": 1,
+        "fields": {
+            "name": "日1",
+            "start_time": "08:30:00",
+            "end_time": "17:30:00"
+        }
+    },
+    {
+        "model": "staff.shift",
+        "pk": 2,
+        "fields": {
+            "name": "日2",
+            "start_time": "9:00:00",
+            "end_time": "18:00:00"
+        }
+    },
+    {
+        "model": "staff.shift",
+        "pk": 3,
+        "fields": {
+            "name": "夜勤",
+            "start_time": "17:00:00",
+            "end_time": "10:00:00"
+        }
+    },
+    {
+        "model": "staff.shift",
+        "pk": 4,
+        "fields": {
+            "name": "09:00 ~ 17:00",
+            "start_time": "9:00:00",
+            "end_time": "17:00:00"
+        }
+    }
+]
