@@ -15,6 +15,8 @@ class VisitType(models.Model):
     """来訪種別（泊、通い、休み など）"""
     code = models.CharField("コード", max_length=10, unique=True)  # 例：泊、通い、休
     name = models.CharField("表示名", max_length=50)  # 例：泊まり、通い、休み
+    arrive_time = models.TimeField(verbose_name="来所時間")
+    leave_time = models.TimeField(verbose_name="帰宅時間")
     color = models.CharField("色コード", max_length=10, default="#cccccc")
 
     def __str__(self):
