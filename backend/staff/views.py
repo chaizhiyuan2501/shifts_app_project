@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema
 from datetime import timedelta, datetime
 from .models import Role, Staff, ShiftType, WorkSchedule
 from django.contrib.auth.models import User
@@ -14,6 +15,26 @@ from .serializers import (
 )
 
 
+@extend_schema(
+    summary="夜勤シフトの自動登録",
+    description="夜勤を登録した際に、翌日を『明け』、翌々日を『休み』として自動的にシフトを登録します。",
+    methods=["POST"],
+    request={
+        "application/json": {"example": {"staff_id": 1, "night_date": "2024-04-01"}}
+    },
+    responses={
+        201: {
+            "example": {
+                "message": "夜勤＋明け＋休みのスケジュールを登録しました。",
+                "schedule": [
+                    {"date": "2024-04-01", "shift": "夜", "created": True},
+                    {"date": "2024-04-02", "shift": "明", "created": True},
+                    {"date": "2024-04-03", "shift": "休", "created": True},
+                ],
+            }
+        }
+    },
+)
 @api_view(["POST"])
 def assign_night_shift(request):
     """
