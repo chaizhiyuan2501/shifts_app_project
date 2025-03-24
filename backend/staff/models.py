@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class Role(models.Model):
     """職種（正社員、アルバイト、夜勤専門 など）"""
 
-    name = models.CharField("職種名", max_length=255, unique=True)
+    name = models.CharField(max_length=255, unique=True, verbose_name="職種名")
 
     def __str__(self):
         return self.name
