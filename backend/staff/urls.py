@@ -17,6 +17,6 @@ router.register(r"shifts", ShiftTypeViewSet)
 router.register(r"schedules", WorkScheduleViewSet)
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path("staff/", include(router.urls)),
     path("assign-night-shift/", assign_night_shift, name="assign-night-shift"),
 ]
