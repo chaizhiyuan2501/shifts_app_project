@@ -44,7 +44,9 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "guest",
+            "guest_id",
             "date",
-            "visit_type",
+            "visit",
+            "visit_id",
             "note",
         ]

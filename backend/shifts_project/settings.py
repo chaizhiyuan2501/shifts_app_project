@@ -140,7 +140,14 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "護工シフト管理API",
-    "DESCRIPTION": "介護施設向けのスタッフシフト管理システムのAPIドキュメントです。",
+    "TITLE": "出勤・食事・患者管理 API",
+    "DESCRIPTION": "このAPIは、スタッフの出勤管理、利用者の訪問、食事注文の情報を統合的に提供するものです。",
     "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,  # POST/PUTにリクエストとレスポンスを分けて表示
+    "SWAGGER_UI_SETTINGS": {
+        "docExpansion": "none",  # 展開折りたたみ設定: none, list, full
+        "deepLinking": True,
+        "defaultModelRendering": "example",
+    },
 }

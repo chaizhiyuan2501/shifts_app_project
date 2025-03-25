@@ -21,8 +21,8 @@ class VisitType(models.Model):
     name = models.CharField(
         max_length=50, verbose_name="表示名"
     )  # 例：泊まり、通い、休み
-    arrive_time = models.TimeField(verbose_name="来所時間")
-    leave_time = models.TimeField(verbose_name="帰宅時間")
+    arrive_time = models.TimeField(verbose_name="来所時間", null=True)
+    leave_time = models.TimeField(verbose_name="帰宅時間", null=True)
     color = models.CharField(max_length=10, default="#cccccc", verbose_name="色コード")
 
     def __str__(self):

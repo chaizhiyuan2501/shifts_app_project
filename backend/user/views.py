@@ -5,6 +5,8 @@ from rest_framework.response import Response
 
 from .serializers import RegisterUserSerializer, UserSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from drf_spectacular.utils import extend_schema
+
 from .serializers import CustomTokenObtainPairSerializer
 
 
@@ -12,6 +14,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
+@extend_schema(
+    summary="ユーザー登録（管理者のみ）",
+    description="管理者が新しいユーザーを登録します。名前、メールアドレス、パスワードが必要です。",
+    tags=["ユーザー管理"],
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register_user(request):
@@ -37,6 +44,11 @@ def register_user(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(
+    summary="ユーザー情報取得",
+    description="ユーザーの基本情報",
+    tags=["ユーザー管理"],
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def current_user_info(request):
@@ -45,3 +57,69 @@ def current_user_info(request):
     """
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
+
+
+from drf_spectacular.utils import extend_schema
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+
+@extend_schema(
+    summary="JWT ログイン",
+    description="ユーザー名（name）とパスワードでログインし、access・refreshトークンを取得します。",
+    tags=["認証"],
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "example": "田中"},
+                "password": {"type": "string", "example": "1980"},
+            },
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "refresh": {"type": "string"},
+                "access": {"type": "string"},
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"},
+                        "email": {"type": "string"},
+                        "role": {"type": "string"},
+                        "is_admin": {"type": "boolean"},
+                    },
+                },
+            },
+        }
+    },
+)
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+@extend_schema(
+    summary="アクセストークン更新",
+    description="refreshトークンを使って新しいaccessトークンを取得します。",
+    tags=["認証"],
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "refresh": {"type": "string", "example": "xxxxx.yyyyy.zzzzz"},
+            },
+        }
+    },
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "access": {"type": "string"},
+            },
+        }
+    },
+)
+class CustomTokenRefreshView(TokenRefreshView):
+    pass
