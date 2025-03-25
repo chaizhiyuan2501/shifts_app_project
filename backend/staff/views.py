@@ -2,6 +2,12 @@ from rest_framework.decorators import api_view
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+    IsAdminUser,
+    IsAuthenticatedOrReadOnly,
+)
 from drf_spectacular.utils import extend_schema
 from datetime import timedelta, datetime
 from .models import Role, Staff, ShiftType, WorkSchedule
@@ -78,18 +84,22 @@ def assign_night_shift(request):
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+    permission_classes = [IsAdminUser]
 
 
 class StaffViewSet(viewsets.ModelViewSet):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
+    permission_classes = [IsAdminUser]
 
 
 class ShiftTypeViewSet(viewsets.ModelViewSet):
     queryset = ShiftType.objects.all()
     serializer_class = ShiftTypeSerializer
+    permission_classes = [IsAdminUser]
 
 
 class WorkScheduleViewSet(viewsets.ModelViewSet):
     queryset = WorkSchedule.objects.all()
     serializer_class = WorkScheduleSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]

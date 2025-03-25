@@ -1,5 +1,5 @@
 ﻿from rest_framework import serializers
-from .models import Guest, VisitType, GuestVisitSchedule
+from .models import Guest, VisitType, VisitSchedule
 from django.contrib.auth.models import User
 from .models import Guest, VisitType
 
@@ -40,7 +40,7 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = GuestVisitSchedule
+        model = VisitSchedule
         fields = [
             "id",
             "guest",

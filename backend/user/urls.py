@@ -1,15 +1,15 @@
-﻿"""
-ユーザー API の URL マッピング。
-"""
+﻿from django.urls import path
+from .views import (
+    register_user,
+    current_user_info,
+    CustomTokenObtainPairView,
+)
+from rest_framework_simplejwt.views import TokenRefreshView
 
-from django.urls import path
-
-from . import views
-
-app_name="user"
-
-urlpatterns =[
-    path("create/",views.CreateUserView.as_view(),name="create"),
-    path("token/",views.CreateTokenView.as_view(),name="token"),
-    path("me/",views.ManageUserView.as_view(),name="me"),
+urlpatterns = [
+    path("register/", register_user, name="register"),
+    path("me/", current_user_info, name="me"),
+    # JWT 認証用
+    path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]

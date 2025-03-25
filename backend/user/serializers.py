@@ -1,56 +1,46 @@
-﻿from django.contrib.auth import (
-    get_user_model,
-    authenticate,
-)
-from django.utils.translation import gettext as _
-from rest_framework import serializers
-
-import re
+﻿from rest_framework import serializers
+from .models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """ユーザーオブジェクトのシリアライザー"""
+    """ユーザー情報表示用"""
 
     class Meta:
-        model = get_user_model()
-        fields = ["email", "password", "name"]
-        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+        model = User
+        fields = ["id", "name", "email", "is_admin"]
+
+
+class RegisterUserSerializer(serializers.ModelSerializer):
+    """ユーザー登録用"""
+
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ["name", "email", "password", "is_admin"]
 
     def create(self, validated_data):
-        """パスワードを暗号化してユーザーを作成する"""
-        return get_user_model().objects.create_user(**validated_data)
-
-    def update(self, instance, validated_data):
-        """ユーザー情報を更新する"""
-        password = validated_data.pop("password", None)
-        user = super().update(instance, validated_data)
-
-        if password:
-            user.set_password(password)
-            user.save()
-
-        return user
+        return User.objects.create_user(
+            name=validated_data["name"],
+            email=validated_data.get("email"),
+            password=validated_data["password"],
+            is_admin=validated_data.get("is_admin", False),
+            is_staff=validated_data.get("is_admin", False),
+        )
 
 
-class AuthTokenSerializer(serializers.Serializer):
-    """ユーザー認証トークンのシリアライザー。"""
-
-    email = serializers.EmailField(max_length=255)
-    password = serializers.CharField(
-        style={"input_type": "password"},
-        trim_whitespace=True,  # パスワードの空白を削除する
-    )
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    JWTログイン時にユーザー情報も一緒に返す
+    """
 
     def validate(self, attrs):
-        """ユーザーを検証し、認証します。"""
-        email = attrs.get("email")
-        password = attrs.get("password")
-        user = authenticate(
-            request=self.context.get("request"), username=email, password=password
-        )
-        if not user:
-            msg = _("提供された情報で認証できません。")
-            raise serializers.ValidationError(msg, code="authorization")
-
-        attrs["user"] = user
-        return attrs
+        data = super().validate(attrs)
+        data["user"] = {
+            "id": self.user.id,
+            "name": self.user.name,
+            "email": self.user.email,
+            "is_admin": self.user.is_admin,
+        }
+        return data

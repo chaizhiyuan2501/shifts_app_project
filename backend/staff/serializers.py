@@ -1,6 +1,5 @@
 ﻿from rest_framework import serializers
 from .models import Role, Staff, ShiftType, WorkSchedule
-from django.contrib.auth.models import User
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -11,18 +10,9 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """Djangoのユーザー情報（ログイン用）"""
-
-    class Meta:
-        model = User
-        fields = ["id", "username", "email"]
-
-
 class StaffSerializer(serializers.ModelSerializer):
     """スタッフ情報シリアライザー"""
 
-    user = UserSerializer(read_only=True)  # ユーザー情報（読み取り専用）
     role = RoleSerializer(read_only=True)
     role_id = serializers.PrimaryKeyRelatedField(
         queryset=Role.objects.all(), source="role", write_only=True
@@ -32,11 +22,10 @@ class StaffSerializer(serializers.ModelSerializer):
         model = Staff
         fields = [
             "id",
-            "user",
             "full_name",
             "role",
             "role_id",
-            "is_admin",
+            "notes",
         ]
 
 
