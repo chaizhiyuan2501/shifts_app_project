@@ -1,5 +1,5 @@
 ﻿from django.db import models
-from django.contrib.auth.models import User
+from user.models import User
 
 
 class Role(models.Model):
@@ -15,13 +15,16 @@ class Staff(models.Model):
     """スタッフ情報"""
 
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, verbose_name="ユーザーアカウント"
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="ユーザー",
+        related_name="staff_profile",
     )
     full_name = models.CharField(max_length=20, verbose_name="氏名")
     role = models.ForeignKey(
         Role, on_delete=models.SET_NULL, null=True, verbose_name="職種"
     )
-    is_admin = models.BooleanField(default=False, verbose_name="管理者権限")
+    notes = models.TextField(blank=True, null=True, verbose_name="備考")
 
     def __str__(self):
         return self.full_name

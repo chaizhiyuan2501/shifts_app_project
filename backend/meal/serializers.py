@@ -17,7 +17,7 @@ class MealOrderSerializer(serializers.ModelSerializer):
 
     meal_type = MealTypeSerializer(read_only=True)
     meal_type_id = serializers.PrimaryKeyRelatedField(
-        queryset=MealType.objects.all(), source="meal_type", read_only=True
+        queryset=MealType.objects.all(), source="meal_type", write_only=True
     )
     guest = serializers.StringRelatedField(read_only=True)
     guest_id = serializers.PrimaryKeyRelatedField(
@@ -41,7 +41,8 @@ class MealOrderSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "date",
-            "meal_type",
+            "meal_type",  # 输出用
+            "meal_type_id",  # 输入用
             "guest",
             "staff",
             "ordered",
