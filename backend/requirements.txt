@@ -13,4 +13,7 @@ django-cors-headers>=4.3.0,<4.4
 djangorestframework-simplejwt>=5.3.0,<6.0  # JWT 認証
 
 # APIドキュメント
-drf-spectacular==0.23.1
+drf-spectacular>=0.26.0,<0.27
+
+#Swagger UI
+http://127.0.0.1:8000/api/docs/swagger/#/

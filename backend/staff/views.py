@@ -20,11 +20,11 @@ from .serializers import (
     WorkScheduleSerializer,
 )
 
-
 @extend_schema(
     summary="夜勤シフトの自動登録",
     description="夜勤を登録した際に、翌日を『明け』、翌々日を『休み』として自動的にシフトを登録します。",
     methods=["POST"],
+     tags=["スタッフ管理"],
     request={
         "application/json": {"example": {"staff_id": 1, "night_date": "2024-04-01"}}
     },
@@ -80,25 +80,41 @@ def assign_night_shift(request):
         status=status.HTTP_201_CREATED,
     )
 
-
+@extend_schema(
+    summary="職種の設定",
+    description="",
+    tags=["スタッフ管理"],
+)
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = [IsAdminUser]
 
-
+@extend_schema(
+    summary="職種の設定",
+    description="",
+    tags=["スタッフ管理"],
+)
 class StaffViewSet(viewsets.ModelViewSet):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
     permission_classes = [IsAdminUser]
 
-
+@extend_schema(
+    summary="シフトの種類の設定",
+    description="",
+    tags=["スタッフ管理"],
+)
 class ShiftTypeViewSet(viewsets.ModelViewSet):
     queryset = ShiftType.objects.all()
     serializer_class = ShiftTypeSerializer
     permission_classes = [IsAdminUser]
 
-
+@extend_schema(
+    summary="勤務シフトの設定",
+    description="",
+    tags=["スタッフ管理"],
+)
 class WorkScheduleViewSet(viewsets.ModelViewSet):
     queryset = WorkSchedule.objects.all()
     serializer_class = WorkScheduleSerializer

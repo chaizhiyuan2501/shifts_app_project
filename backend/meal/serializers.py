@@ -44,7 +44,9 @@ class MealOrderSerializer(serializers.ModelSerializer):
             "meal_type",  # 输出用
             "meal_type_id",  # 输入用
             "guest",
+            "guest_id",
             "staff",
+            "staff_id",
             "ordered",
             "auto_generated",
             "note",

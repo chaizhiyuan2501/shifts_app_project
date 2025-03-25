@@ -15,7 +15,7 @@ def create_default_data(sender, **kwargs):
     """
 
     # 1. 職種（Role）を初期登録
-    default_roles = ["管理者", "正社員", "アルバイト", "夜勤専門"]
+    default_roles = ["管理者", "正社員", "アルバイト", "夜勤専門", "ケアマネ", "看護師"]
     for role_name in default_roles:
         # Roleテーブルに存在しない場合のみ追加
         Role.objects.get_or_create(name=role_name)
@@ -65,10 +65,17 @@ def create_default_data(sender, **kwargs):
             "color": "#9b59b6",
         },
         {
-            "code": "ケア",
+            "code": "ケ",
             "name": "ケアマネ",
             "start": "09:00",
             "end": "17:00",
+            "color": "#1abc9c",
+        },
+        {
+            "code": "看",
+            "name": "看護師",
+            "start": "9:00",
+            "end": "13:00",
             "color": "#1abc9c",
         },
     ]
