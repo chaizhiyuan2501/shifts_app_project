@@ -1,6 +1,8 @@
 ﻿from django.db import models
 from user.models import User
 
+from utils.date_utils import get_weekday_jp
+
 
 class Role(models.Model):
     """職種（正社員、アルバイト、夜勤専門 など）"""
@@ -72,6 +74,10 @@ class WorkSchedule(models.Model):
             "date",
             "shift",
         ]
+
+    @property
+    def weekday_jp(self):
+        return get_weekday_jp(self.date)
 
     def __str__(self):
         return f"{self.date} - {self.staff.full_name} - {self.shift.code}"
