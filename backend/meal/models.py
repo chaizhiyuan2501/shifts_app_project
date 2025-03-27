@@ -1,5 +1,7 @@
 from django.db import models
 
+from utils.date_utils import get_weekday_jp
+
 
 class MealType(models.Model):
     """食事の種類（朝・昼・夕）"""
@@ -10,6 +12,10 @@ class MealType(models.Model):
     display_name = models.CharField(
         max_length=20, verbose_name="表示名"
     )  # 例：朝食、昼食、夕食
+
+    class Meta:
+        verbose_name = "食事の種類"
+        verbose_name_plural = "食事の種類"
 
     def __str__(self):
         return self.display_name
@@ -42,8 +48,17 @@ class MealOrder(models.Model):
     auto_generated = models.BooleanField(default=True, verbose_name="自動生成")
     note = models.TextField(blank=True, null=True, verbose_name="備考")
 
+    @property
+    def weekday_jp(self):
+        """
+        指定した日付の曜日を日本語で返す
+        """
+        return get_weekday_jp(self.date)
+
     class Meta:
         unique_together = ("date", "meal_type", "guest", "staff")
+        verbose_name = "食事の注文"
+        verbose_name_plural = "食事の注文"
 
     def __str__(self):
         target = self.guest or self.staff

@@ -22,6 +22,11 @@ python manage.py migrate
 
 ```
 
+#Swagger UI
+```bash
+http://127.0.0.1:8000/api/docs/swagger/#/
+
+```
 
 
 ### **frontend コンテナを一時的に起動し、シェル(sh)を開く**

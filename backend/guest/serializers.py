@@ -1,7 +1,11 @@
 ﻿from rest_framework import serializers
 from .models import Guest, VisitType, VisitSchedule
 from django.contrib.auth.models import User
+
 from .models import Guest, VisitType
+from utils.date_utils import get_weekday_jp
+
+
 
 
 class GuestSerializer(serializers.ModelSerializer):
@@ -38,6 +42,13 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
     visit_id = serializers.PrimaryKeyRelatedField(
         queryset=VisitType.objects.all(), source="visit", write_only=True
     )
+    weekday = serializers.SerializerMethodField()
+
+    def weekday_jp(self):
+        """
+        指定した日付の曜日を日本語で返す
+        """
+        return get_weekday_jp(self.date)
 
     class Meta:
         model = VisitSchedule
@@ -49,4 +60,5 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
             "visit",
             "visit_id",
             "note",
+            "weekday",
         ]
