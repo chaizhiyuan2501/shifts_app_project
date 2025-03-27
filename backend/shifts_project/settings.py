@@ -150,42 +150,46 @@ SPECTACULAR_SETTINGS = {
         "docExpansion": "none",  # 展開折りたたみ設定: none, list, full
         "deepLinking": True,
         "defaultModelRendering": "example",
+        "persistAuthorization": True,  # Swagger UI 上保留认证
+    },
+    "SECURITY": [{"BearerAuth": []}],  # <- 启用 Bearer Token
+    "COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
     },
 }
 
-# JWT token的配置
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # 访问令牌的有效时间
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),    # 刷新令牌的有效时间
-    "ROTATE_REFRESH_TOKENS": False,         # 若为True,则刷新后新的refresh_token有更新的有效时间
-    "BLACKLIST_AFTER_ROTATION": False,      # 若为True,刷新后的token将添加到黑名单中,
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # 刷新令牌的有效时间
+    "ROTATE_REFRESH_TOKENS": False,  # 若为True,则刷新后新的refresh_token有更新的有效时间
+    "BLACKLIST_AFTER_ROTATION": False,  # 若为True,刷新后的token将添加到黑名单中,
     "UPDATE_LAST_LOGIN": False,
-
-    "ALGORITHM": "HS256",       # 对称算法:HS256 HS384 HS512  非对称算法:RSA
+    "ALGORITHM": "HS256",  # 对称算法:HS256 HS384 HS512  非对称算法:RSA
     "SIGNING_KEY": SECRET_KEY,  # 生成token时所使用的密钥
-    "VERIFYING_KEY": "",        # if signing_key, verifying_key will be ignore.
+    "VERIFYING_KEY": "",  # if signing_key, verifying_key will be ignore.
     "AUDIENCE": None,
     "ISSUER": None,
     "JSON_ENCODER": None,
     "JWK_URL": None,
     "LEEWAY": 0,
-
-    "AUTH_HEADER_TYPES": ("Bearer",),   # Authorization: Bearer <token>
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",   # if HTTP_X_ACCESS_TOKEN, X_ACCESS_TOKEN:Bearer <token>
+    "AUTH_HEADER_TYPES": ("Bearer",),  # Authorization: Bearer <token>
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",  # if HTTP_X_ACCESS_TOKEN, X_ACCESS_TOKEN:Bearer <token>
     "USER_ID_FIELD": "id",  # 使用唯一不变的数据库字段,将包含在生成的令牌中以标识用户
-    "USER_ID_CLAIM": "user_id", # 使用token是需要的用户信息
+    "USER_ID_CLAIM": "user_id",  # 使用token是需要的用户信息
     "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
-
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
     "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
-
     "JTI_CLAIM": "jti",
-
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-
     "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
     "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
