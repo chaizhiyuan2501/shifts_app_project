@@ -3,6 +3,8 @@ from .models import MealType, MealOrder
 from guest.models import Guest
 from staff.models import Staff
 
+from utils.date_utils import get_weekday_jp
+
 
 class MealTypeSerializer(serializers.ModelSerializer):
     """食事種類のシリアライザー"""
@@ -35,6 +37,13 @@ class MealOrderSerializer(serializers.ModelSerializer):
         allow_null=True,
         required=False,
     )
+    weekday = serializers.SerializerMethodField()
+
+    def weekday_jp(self):
+        """
+        指定した日付の曜日を日本語で返す
+        """
+        return get_weekday_jp(self.date)
 
     class Meta:
         model = MealOrder
@@ -50,4 +59,5 @@ class MealOrderSerializer(serializers.ModelSerializer):
             "ordered",
             "auto_generated",
             "note",
+            "weekday",
         ]

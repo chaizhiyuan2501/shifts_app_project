@@ -25,19 +25,17 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, name, password, email=None):
-        """
-        管理者ユーザー作成
-        """
-        user = self.create_user(
+    def create_superuser(self, name, password, email=None, **extra_fields):
+        extra_fields.setdefault("is_admin", True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        return self.create_user(
             name=name,
             password=password,
             email=email,
-            is_admin=True,
-            is_staff=True,
-            is_superuser=True,
+            **extra_fields,
         )
-        return user
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -64,7 +62,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = "user"
+        # Django管理サイトで表示される単数形の名称（例：「ユーザーを追加」など）
         verbose_name = "ユーザー"
+        # Django管理サイトで表示される複数形の名称（例：「ユーザー一覧」など）
+        # ※省略すると「ユーザーs」になってしまうため、明示的に指定
+        verbose_name_plural = "ユーザー"
 
     def __str__(self):
         return f"{self.name}（管理者）" if self.is_admin else self.name

@@ -4,9 +4,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .serializers import RegisterUserSerializer, UserSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.utils import extend_schema
-
 from .serializers import CustomTokenObtainPairSerializer
 
 
@@ -57,10 +56,6 @@ def current_user_info(request):
     """
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
-
-
-from drf_spectacular.utils import extend_schema
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 @extend_schema(

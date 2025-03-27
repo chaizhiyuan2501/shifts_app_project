@@ -12,6 +12,10 @@ class Role(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = "職種"
+        verbose_name_plural = "職種"
+
 
 class Staff(models.Model):
     """スタッフ情報"""
@@ -27,6 +31,10 @@ class Staff(models.Model):
         Role, on_delete=models.SET_NULL, null=True, verbose_name="職種"
     )
     notes = models.TextField(blank=True, null=True, verbose_name="備考")
+
+    class Meta:
+        verbose_name = "スタッフ情報"
+        verbose_name_plural = "スタッフ情報"
 
     def __str__(self):
         return self.full_name
@@ -51,6 +59,10 @@ class ShiftType(models.Model):
         verbose_name="表示色（オプション）",
     )
 
+    class Meta:
+        verbose_name = "シフトの種類"
+        verbose_name_plural = "シフトの種類"
+
     def __str__(self):
         return f"{self.code}（{self.name}）"
 
@@ -65,19 +77,24 @@ class WorkSchedule(models.Model):
     date = models.DateField(verbose_name="日付")
     note = models.TextField(blank=True, null=True, verbose_name="備考")
 
+    @property
+    def weekday_jp(self):
+        """
+        指定した日付の曜日を日本語で返す
+        """
+        return get_weekday_jp(self.date)
+
     class Meta:
         # 同じスタッフが同じ日に複数のシフトに入ることを禁止する（ユニーク制約）
         unique_together = ("staff", "date")
+        verbose_name = "勤務シフト"
+        verbose_name_plural = "勤務シフト"
 
         # デフォルトの並び順：日付の昇順 → シフト（ID）の昇順で表示
         ordering = [
             "date",
             "shift",
         ]
-
-    @property
-    def weekday_jp(self):
-        return get_weekday_jp(self.date)
 
     def __str__(self):
         return f"{self.date} - {self.staff.full_name} - {self.shift.code}"
