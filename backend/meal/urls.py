@@ -7,6 +7,8 @@ from .views import (
     MealOrderViewSet,
 )
 
+app_name = 'meal'
+
 router = DefaultRouter()
 router.register(r"meal-type", MealTypeViewSet)
 router.register(r"meal-order", MealOrderViewSet)

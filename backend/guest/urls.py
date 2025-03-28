@@ -8,6 +8,9 @@ from .views import (
     VisitScheduleViewSet,
 )
 
+app_name = "guest"
+
+
 router = DefaultRouter()
 router.register(r"guest", GuestViewSet)
 router.register(r"visit-type", VisitTypeViewSet)

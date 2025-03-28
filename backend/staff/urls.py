@@ -10,6 +10,8 @@ from .views import (
     assign_night_shift,
 )
 
+app_name = 'staff'
+
 router = DefaultRouter()
 router.register(r"roles", RoleViewSet)
 router.register(r"staff", StaffViewSet)

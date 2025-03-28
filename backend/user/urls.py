@@ -6,6 +6,8 @@ from .views import (
 )
 from .views import CustomTokenObtainPairView, CustomTokenRefreshView
 
+app_name = 'user'
+
 urlpatterns = [
     path("register/", register_user, name="register"),
     path("me/", current_user_info, name="me"),
