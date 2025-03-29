@@ -1,7 +1,7 @@
 ﻿from django.db import models
 from user.models import User
 
-from utils.date_utils import get_weekday_jp
+from utils.date_utils import get_weekday_jp, get_shift_period_range
 
 
 class Role(models.Model):
@@ -62,6 +62,38 @@ class ShiftType(models.Model):
     class Meta:
         verbose_name = "シフトの種類"
         verbose_name_plural = "シフトの種類"
+
+    @property
+    def monthly_work_hours(self):
+        """
+        現在の集計期間（15日〜翌月15日）の出勤時間合計を返す。
+        """
+        from .models import WorkSchedule  # 循環importを避けるためにここでインポート
+        from datetime import datetime, timedelta
+
+        # 今の集計対象期間（15日〜翌月15日）を取得
+        start_date, end_date = get_shift_period_range()
+
+        # このスタッフの出勤スケジュールを集計期間でフィルター
+        schedules = WorkSchedule.objects.filter(
+            staff=self, date__gte=start_date, date__lt=end_date
+        )
+
+        # 各シフトの時間を合計（開始〜終了の差分）
+        total = timedelta()
+        for schedule in schedules:
+            shift = schedule.shift
+            # 開始時間と終了時間の差分
+            start_dt = datetime.combine(schedule.date, shift.start_time)
+            end_dt = datetime.combine(schedule.date, shift.end_time)
+
+            # 翌日を跨ぐ場合（例：夜勤 22:00〜翌日7:00）には1日加算
+            if end_dt <= start_dt:
+                end_dt += timedelta(days=1)
+
+            total += end_dt - start_dt
+
+        return total
 
     def __str__(self):
         return f"{self.code}（{self.name}）"
