@@ -39,16 +39,45 @@ class Staff(models.Model):
     def __str__(self):
         return self.full_name
 
+    @property
+    def monthly_work_hours(self):
+        """
+        現在の集計期間（15日〜翌月15日）の出勤時間合計を返す。
+
+        使用例:
+            staff = Staff.objects.get(full_name="田中太郎")
+            print(staff.monthly_work_hours)  # 例: 2 days, 6:00:00
+
+        戻り値:
+            datetime.timedelta 型の合計時間
+        """
+        from .models import WorkSchedule  # 循環importを避けるためにここでインポート
+        from datetime import datetime, timedelta
+
+        start_date, end_date = get_shift_period_range()
+        schedules = WorkSchedule.objects.filter(
+            staff=self, date__gte=start_date, date__lt=end_date
+        )
+
+        total = timedelta()
+        for schedule in schedules:
+            shift = schedule.shift
+            start_dt = datetime.combine(schedule.date, shift.start_time)
+            end_dt = datetime.combine(schedule.date, shift.end_time)
+
+            if end_dt <= start_dt:
+                end_dt += timedelta(days=1)
+
+            total += end_dt - start_dt
+
+        return total
+
 
 class ShiftType(models.Model):
     """シフトの種類（早番、遅番、夜勤、明けなど）"""
 
-    code = models.CharField(
-        max_length=10, unique=True, verbose_name="コード"
-    )  # 例：日、夜、明、休
-    name = models.CharField(
-        max_length=50, verbose_name="シフト名"
-    )  # 例：日勤、夜勤、明け
+    code = models.CharField(max_length=10, unique=True, verbose_name="コード")
+    name = models.CharField(max_length=50, verbose_name="シフト名")
     start_time = models.TimeField(verbose_name="開始時刻")
     end_time = models.TimeField(verbose_name="終了時刻")
     color = models.CharField(
@@ -62,38 +91,6 @@ class ShiftType(models.Model):
     class Meta:
         verbose_name = "シフトの種類"
         verbose_name_plural = "シフトの種類"
-
-    @property
-    def monthly_work_hours(self):
-        """
-        現在の集計期間（15日〜翌月15日）の出勤時間合計を返す。
-        """
-        from .models import WorkSchedule  # 循環importを避けるためにここでインポート
-        from datetime import datetime, timedelta
-
-        # 今の集計対象期間（15日〜翌月15日）を取得
-        start_date, end_date = get_shift_period_range()
-
-        # このスタッフの出勤スケジュールを集計期間でフィルター
-        schedules = WorkSchedule.objects.filter(
-            staff=self, date__gte=start_date, date__lt=end_date
-        )
-
-        # 各シフトの時間を合計（開始〜終了の差分）
-        total = timedelta()
-        for schedule in schedules:
-            shift = schedule.shift
-            # 開始時間と終了時間の差分
-            start_dt = datetime.combine(schedule.date, shift.start_time)
-            end_dt = datetime.combine(schedule.date, shift.end_time)
-
-            # 翌日を跨ぐ場合（例：夜勤 22:00〜翌日7:00）には1日加算
-            if end_dt <= start_dt:
-                end_dt += timedelta(days=1)
-
-            total += end_dt - start_dt
-
-        return total
 
     def __str__(self):
         return f"{self.code}（{self.name}）"
@@ -117,16 +114,10 @@ class WorkSchedule(models.Model):
         return get_weekday_jp(self.date)
 
     class Meta:
-        # 同じスタッフが同じ日に複数のシフトに入ることを禁止する（ユニーク制約）
         unique_together = ("staff", "date")
         verbose_name = "勤務シフト"
         verbose_name_plural = "勤務シフト"
-
-        # デフォルトの並び順：日付の昇順 → シフト（ID）の昇順で表示
-        ordering = [
-            "date",
-            "shift",
-        ]
+        ordering = ["date", "shift"]
 
     def __str__(self):
         return f"{self.date} - {self.staff.full_name} - {self.shift.code}"
