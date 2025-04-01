@@ -34,6 +34,8 @@ class StaffSerializer(serializers.ModelSerializer):
 class ShiftTypeSerializer(serializers.ModelSerializer):
     """シフト種類シリアライザー"""
 
+    work_hours = serializers.SerializerMethodField()
+
     class Meta:
         model = ShiftType
         fields = [
@@ -42,8 +44,12 @@ class ShiftTypeSerializer(serializers.ModelSerializer):
             "name",
             "start_time",
             "end_time",
-            "color",
+            "break_minutes",
+            "work_hours" "color",
         ]
+
+    def get_work_hours(self, obj):
+        return round(obj.get_work_duration().total_second() / 3600, 2)
 
 
 class WorkScheduleSerializer(serializers.ModelSerializer):

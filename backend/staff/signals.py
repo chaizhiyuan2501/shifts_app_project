@@ -27,6 +27,7 @@ def create_default_data(sender, **kwargs):
             "name": "日勤1",  # 表示名
             "start": "09:00",  # 勤務開始時刻
             "end": "18:00",  # 勤務終了時刻
+            "break_minutes": 60,  # 休憩時間
             "color": "#2ecc71",  # 表示色（カレンダーUI用など）
         },
         {
@@ -34,6 +35,7 @@ def create_default_data(sender, **kwargs):
             "name": "日勤2",
             "start": "09:00",
             "end": "18:00",
+            "break_minutes": 60,
             "color": "#2e40cc",
         },
         {
@@ -41,6 +43,7 @@ def create_default_data(sender, **kwargs):
             "name": "夜勤",
             "start": "17:00",
             "end": "00:00",
+            "break_minutes": 120,
             "color": "#3498db",
         },
         {
@@ -62,6 +65,7 @@ def create_default_data(sender, **kwargs):
             "name": "訪問",
             "start": "08:30",
             "end": "17:30",
+            "break_minutes": 60,
             "color": "#9b59b6",
         },
         {
@@ -69,6 +73,7 @@ def create_default_data(sender, **kwargs):
             "name": "ケアマネ",
             "start": "09:00",
             "end": "17:00",
+            "break_minutes": 45,
             "color": "#1abc9c",
         },
         {
@@ -76,6 +81,15 @@ def create_default_data(sender, **kwargs):
             "name": "看護師",
             "start": "9:00",
             "end": "13:00",
+            "break_minutes": 30,
+            "color": "#1abc9c",
+        },
+        {
+            "code": "有",
+            "name": "有給休暇",
+            "start": "9:00",
+            "end": "18:00",
+            "break_minutes": 60,
             "color": "#1abc9c",
         },
     ]
