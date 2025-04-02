@@ -43,7 +43,7 @@ def create_default_data(sender, **kwargs):
             "name": "夜勤",
             "start": "17:00",
             "end": "00:00",
-            "break_minutes": 120,
+            "break_minutes": 60,
             "color": "#3498db",
         },
         {
@@ -51,6 +51,7 @@ def create_default_data(sender, **kwargs):
             "name": "明け",
             "start": "00:00",
             "end": "10:00",
+            "break_minutes": 60,
             "color": "#f1c40f",
         },
         {
@@ -104,6 +105,7 @@ def create_default_data(sender, **kwargs):
                     shift["start"], "%H:%M"
                 ).time(),  # 文字列からtime型に変換
                 "end_time": datetime.datetime.strptime(shift["end"], "%H:%M").time(),
+                "break_minutes": shift.get("break_minutes", 0),
                 "color": shift["color"],
             },
         )

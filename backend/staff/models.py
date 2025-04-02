@@ -107,13 +107,16 @@ class ShiftType(models.Model):
         """
         実際の勤務時間（休憩時間を引いた時間）を timedelta で返す。
         """
-        start_dt = datetime.combine(date.today(), self.start_time)
-        end_dt = datetime.combine(date.today(), self.end_time)
+        today = datetime.today().date()
+        start_dt = datetime.combine(today, self.start_time)
+        end_dt = datetime.combine(today, self.end_time)
+
+        # end が start より早ければ、翌日の勤務とみなす
         if end_dt <= start_dt:
             end_dt += timedelta(days=1)
 
-        work_duration = end_dt - start_dt - timedelta(minutes=self.break_minutes)
-        return work_duration
+        duration = end_dt - start_dt - timedelta(minutes=self.break_minutes)
+        return duration
 
 
 class WorkSchedule(models.Model):
