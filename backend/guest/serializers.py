@@ -6,8 +6,6 @@ from .models import Guest, VisitType
 from utils.date_utils import get_weekday_jp
 
 
-
-
 class GuestSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -26,8 +24,6 @@ class VisitTypeSerializer(serializers.ModelSerializer):
             "id",
             "code",
             "name",
-            "arrive_time",
-            "leave_time",
             "color",
         ]
 
@@ -57,6 +53,8 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
             "guest",
             "guest_id",
             "date",
+            "arrive_time",
+            "leave_time",
             "visit",
             "visit_id",
             "note",
