@@ -8,5 +8,9 @@ TODO:2025/04/02 夜勤休憩時間計算機能エラー修正
 ![◯] FAILED staff/tests/test_staff_model.py::TestStaffModel::test_get_work_duration_night_shift - assert datetime.timedelta(seconds=25200) == datetime.timedelta(seconds=54000)
 
 TODO:2025/04/03
-![] guestのテスト
-![] viewsの編集
+![◯] guestのmodelのテスト
+![◯] userのviewsの編集
+
+TODO:2025/04/04
+![] UserViewのテスト
+![] is_activeによるAPIのアクセス
