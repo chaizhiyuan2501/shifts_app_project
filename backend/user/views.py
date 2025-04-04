@@ -13,7 +13,7 @@ from .serializers import (
     UserSerializer,
     CustomTokenObtainPairSerializer,
 )
-from backend.utils.api_response_utils import api_response
+from utils.api_response_utils import api_response
 
 
 @extend_schema(
