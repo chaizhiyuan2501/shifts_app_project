@@ -52,7 +52,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         # デフォルトのトークン取得処理を実行
         data = super().validate(attrs)
-
         # トークンの他に、ログインユーザーの基本情報を追加
         data["user"] = {
             "id": self.user.id,
@@ -61,3 +60,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "is_admin": self.user.is_admin,
         }
         return data
+    def validate(self, attrs):
+        print("JWT LOGIN DEBUG:", attrs)
+        return super().validate(attrs)

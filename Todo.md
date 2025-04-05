@@ -12,5 +12,11 @@ TODO:2025/04/03
 ![◯] userのviewsの編集
 
 TODO:2025/04/04
-![] UserViewのテスト
-![] is_activeによるAPIのアクセス
+![△] UserViewのテスト
+![☓] is_activeによるAPIのアクセス (is_staffに変更する予定)
+
+TODO:2025/04/05
+![◯] UserViewのテスト
+
+TODO:2025/04/06
+![] staff,guestのViewTest

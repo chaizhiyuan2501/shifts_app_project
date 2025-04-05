@@ -4,14 +4,14 @@ from django.urls import reverse
 from user.models import User
 
 
-
 @pytest.mark.django_db
 class TestUserAPIViews:
     def setup_method(self):
+        User.objects.all().delete()  # テストケースごとにデータの重複や干渉を防ぐため、ユーザーモデルの全データを削除し、クリーンな状態から開始する。
         self.client = APIClient()
-        self.register_url = reverse("user-register")
-        self.login_url = reverse("token-obtain-pair")
-        self.user_list_url = reverse("user-list")
+        self.register_url = reverse("user:user-register")
+        self.login_url = reverse("user:user-login")
+        self.user_list_url = reverse("user:user-list")
         self.user = User.objects.create_user(name="testuser", password="1980")
         self.admin = User.objects.create_superuser(name="admin", password="adminpass")
 
@@ -62,7 +62,7 @@ class TestUserAPIViews:
         - 自身または管理者がユーザー詳細を取得できること
         """
         self.client.force_authenticate(user=self.user)
-        url = reverse("user-detail", kwargs={"id": self.user.id})
+        url = reverse("user:user-detail", kwargs={"id": self.user.id})
         response = self.client.get(url)
         assert response.status_code == 200
         assert response.data["data"]["name"] == self.user.name
@@ -73,7 +73,7 @@ class TestUserAPIViews:
         - ユーザー名を変更できること
         """
         self.client.force_authenticate(user=self.user)
-        url = reverse("user-detail", kwargs={"id": self.user.id})
+        url = reverse("user:user-detail", kwargs={"id": self.user.id})
         data = {"name": "updateduser"}
         response = self.client.put(url, data, format="json")
         assert response.status_code == 200
@@ -85,6 +85,6 @@ class TestUserAPIViews:
         - 管理者がユーザーを削除できること
         """
         self.client.force_authenticate(user=self.admin)
-        url = reverse("user-detail", kwargs={"id": self.user.id})
+        url = reverse("user:user-detail", kwargs={"id": self.user.id})
         response = self.client.delete(url)
         assert response.status_code == 204
