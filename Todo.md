@@ -19,4 +19,7 @@ TODO:2025/04/05
 ![◯] UserViewのテスト
 
 TODO:2025/04/06
+![◯] userのserializers
+
+TODO:2025/04/07
 ![] staff,guestのViewTest

@@ -1,37 +1,53 @@
 ﻿from rest_framework import serializers
-from .models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """
-    ユーザー情報をシリアライズするための基本的なシリアライザ。
-    - 一般的にログイン中のユーザー情報の取得や表示に使用。
-    """
-
-    class Meta:
-        model = User
-        fields = ["id", "name", "email", "is_admin"]
+from .models import User
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
     """
     ユーザー登録用のシリアライザ。
-    - 管理者による新規登録や、公開登録エンドポイントに使用される。
-    - パスワードは write_only として定義し、レスポンスには含まれないようにする。
+    - 名前の重複チェック
+    - パスワードの強度チェック
     """
 
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=4,
+        help_text="4文字以上のパスワードを入力してください"
+    )
 
     class Meta:
         model = User
         fields = ["name", "email", "password", "is_admin"]
 
+    def validate_name(self, value):
+        """
+        重複していない名前かチェック。
+        """
+        if User.objects.filter(name=value).exists():
+            raise serializers.ValidationError("この名前は既に使用されています。")
+        return value
+
+    def validate_email(self, value):
+        """
+        メールアドレスがあれば、既存の登録と重複していないかチェック。
+        """
+        if value and User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("このメールアドレスは既に登録されています。")
+        return value
+
+    def validate_password(self, value):
+        """
+        パスワードの最低限の長さと強度をチェック。
+        """
+        if len(value) < 4:
+            raise serializers.ValidationError("パスワードは4文字以上である必要があります。")
+        return value
+
     def create(self, validated_data):
         """
-        バリデーション済みデータからユーザーを作成。
-        - create_user メソッドでパスワードは自動でハッシュ化される。
-        - is_admin が True の場合、同時に is_staff も True に設定する。
+        ユーザーを作成（パスワードをハッシュ化）。
+        is_admin=Trueの場合、自動的にis_staffもTrueに。
         """
         return User.objects.create_user(
             name=validated_data["name"],
@@ -42,17 +58,47 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         )
 
 
+class UserSerializer(serializers.ModelSerializer):
+    """
+    ユーザー情報取得・更新用のシリアライザ。
+    """
+
+    class Meta:
+        model = User
+        fields = ["id", "name", "email", "is_admin", "is_active"]
+
+    def validate_name(self, value):
+        """
+        他のユーザーと重複していない名前かをチェック（更新用）。
+        """
+        if self.instance:
+            if User.objects.exclude(id=self.instance.id).filter(name=value).exists():
+                raise serializers.ValidationError("この名前は既に使用されています。")
+        return value
+
+    def validate_email(self, value):
+        """
+        他のユーザーと重複していないメールアドレスかチェック。
+        """
+        if value and self.instance:
+            if User.objects.exclude(id=self.instance.id).filter(email=value).exists():
+                raise serializers.ValidationError("このメールアドレスは既に使用されています。")
+        return value
+
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
-    JWTログイン時に、トークンだけでなくユーザー情報も一緒に返すための
-    カスタムシリアライザ。
-    - 通常の TokenObtainPairSerializer を拡張して使用。
+    JWT ログイン用カスタムシリアライザ。
+    ユーザー情報を含めてトークンを返す。
     """
 
     def validate(self, attrs):
-        # デフォルトのトークン取得処理を実行
-        data = super().validate(attrs)
-        # トークンの他に、ログインユーザーの基本情報を追加
+        print("JWT LOGIN DEBUG:", attrs)  # デバッグ用
+        try:
+            data = super().validate(attrs)
+        except Exception:
+            raise serializers.ValidationError("認証情報が正しくありません。")
+
         data["user"] = {
             "id": self.user.id,
             "name": self.user.name,
@@ -60,6 +106,3 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "is_admin": self.user.is_admin,
         }
         return data
-    def validate(self, attrs):
-        print("JWT LOGIN DEBUG:", attrs)
-        return super().validate(attrs)
