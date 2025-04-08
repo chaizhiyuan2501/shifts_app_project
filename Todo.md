@@ -22,4 +22,12 @@ TODO:2025/04/06
 ![◯] userのserializers
 
 TODO:2025/04/07
-![] staff,guestのViewTest
+![△] staff,guestのViewTest
+
+TODO:2025/04/08
+![△] mealのuserのserializers､viewsの変更
+![△] readmeの編集
+
+TODO:2025/04/09
+![] readmeの編集
+![] mealのuserのserializers､viewsのテスト
