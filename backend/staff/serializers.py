@@ -22,9 +22,9 @@ class StaffSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Staff
-        fields = ["id", "full_name", "role", "role_id", "notes"]
+        fields = ["id", "name", "role", "role_id", "notes"]
 
-    def validate_full_name(self, value):
+    def validate_name(self, value):
         """氏名のバリデーション：空欄禁止"""
         if not value.strip():
             raise serializers.ValidationError("氏名を入力してください。")

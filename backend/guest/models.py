@@ -6,7 +6,7 @@ from utils.date_utils import get_weekday_jp
 class Guest(models.Model):
     """利用者情報"""
 
-    full_name = models.CharField(max_length=50, verbose_name="氏名")
+    name = models.CharField(max_length=50, verbose_name="氏名")
     birthday = models.DateField(null=True, blank=True, verbose_name="生年月日")
     contact = models.CharField(max_length=100, blank=True, verbose_name="連絡先")
     notes = models.TextField(blank=True, null=True, verbose_name="備考")
@@ -16,7 +16,7 @@ class Guest(models.Model):
         verbose_name_plural = "利用者情報"
 
     def __str__(self):
-        return self.full_name
+        return self.name
 
 
 class VisitType(models.Model):
@@ -64,4 +64,4 @@ class VisitSchedule(models.Model):
         verbose_name_plural = "来訪スケジュール"
 
     def __str__(self):
-        return f"{self.date} - {self.guest.full_name} - {self.visit_type.code if self.visit_type else '未定'}"
+        return f"{self.date} - {self.guest.name} - {self.visit_type.code if self.visit_type else '未定'}"

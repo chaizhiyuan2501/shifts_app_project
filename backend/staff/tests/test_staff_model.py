@@ -17,7 +17,7 @@ class TestStaffModel:
         )
         self.role, _ = Role.objects.get_or_create(name="正社員")
         self.staff = Staff.objects.create(
-            user=self.user, full_name="田中太郎", role=self.role
+            user=self.user, name="田中太郎", role=self.role
         )
 
         self.shift_day, _ = ShiftType.objects.get_or_create(

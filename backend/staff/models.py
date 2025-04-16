@@ -27,7 +27,7 @@ class Staff(models.Model):
         verbose_name="ユーザー",
         related_name="staff_profile",
     )
-    full_name = models.CharField(max_length=20, verbose_name="氏名")
+    name = models.CharField(max_length=20, verbose_name="氏名")
     role = models.ForeignKey(
         Role, on_delete=models.SET_NULL, null=True, verbose_name="職種"
     )
@@ -38,14 +38,14 @@ class Staff(models.Model):
         verbose_name_plural = "スタッフ情報"
 
     def __str__(self):
-        return self.full_name
+        return self.name
 
     def monthly_work_hours(self, target_date=None):
         """
         現在の集計期間（15日〜翌月15日）の出勤時間合計を返す（休憩時間を除く）。
 
         使用例:
-            staff = Staff.objects.get(full_name="田中太郎")
+            staff = Staff.objects.get(name="田中太郎")
             print(staff.monthly_work_hours())  # 例: 2 days, 6:00:00
 
         パラメータ:
@@ -136,7 +136,7 @@ class WorkSchedule(models.Model):
         ordering = ["date", "shift"]
 
     def __str__(self):
-        return f"{self.date} - {self.staff.full_name} - {self.shift.code}"
+        return f"{self.date} - {self.staff.name} - {self.shift.code}"
 
     @property
     def weekday_jp(self):

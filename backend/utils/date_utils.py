@@ -11,9 +11,6 @@ def get_weekday_jp(date):
     return ["月", "火", "水", "木", "金", "土", "日"][date.weekday()]
 
 
-from datetime import date, timedelta
-
-
 def get_shift_period_range(target_date=None):
     """
     指定された日付が属する「シフト集計期間（15日〜翌月15日）」の

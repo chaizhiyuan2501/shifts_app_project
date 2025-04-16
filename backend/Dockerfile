@@ -1,19 +1,23 @@
 ﻿# Python 3.11 の公式イメージを使用
 FROM python:3.11
 
-# 環境変数を設定します
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# 環境変数を設定します（書き込みキャッシュ防止、バッファ抑制）
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # 作業ディレクトリを設定
 WORKDIR /app
 
-# システム依存関係をインストールします
+# システム依存関係をインストールします（OpenCV / OCR 用含む）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+    gcc \
+    libpq-dev \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Python の依存関係をインストール
-COPY requirements.txt .
+COPY requirements.txt .7
 RUN pip install --no-cache-dir -r requirements.txt
 
 # プロジェクトファイルをコピー

@@ -29,5 +29,12 @@ TODO:2025/04/08
 ![△] readmeの編集
 
 TODO:2025/04/09
-![] readmeの編集
-![] mealのuserのserializers､viewsのテスト
+![◯] readmeの編集
+![◯] mealのuserのserializers､viewsのテスト
+
+TODO:2025/04/16
+![◯] guestにAI_ocr機能追加
+![◯] テストファイル作成
+
+TODO:2025/04/17
+![] Guestテスト

@@ -18,7 +18,7 @@ class TestGuestModels:
         """
         テスト用に共通で使用するゲストと来所区分を作成する。
         """
-        self.guest = Guest.objects.create(full_name="山田太郎")
+        self.guest = Guest.objects.create(name="山田太郎")
         self.visit_type = VisitType.objects.create(
             code="通", name="通常利用", color="#ff0000"
         )
@@ -29,8 +29,8 @@ class TestGuestModels:
         - 氏名・カナ名が保存されるか
         - __str__ メソッドが氏名を返すか
         """
-        guest = Guest.objects.create(full_name="佐藤花子",birthday="1940-01-01",contact="00011112222",notes="要介護3")
-        assert guest.full_name == "佐藤花子"
+        guest = Guest.objects.create(name="佐藤花子",birthday="1940-01-01",contact="00011112222",notes="要介護3")
+        assert guest.name == "佐藤花子"
         assert guest.birthday == "1940-01-01"
         assert guest.contact == "00011112222"
         assert guest.notes == "要介護3"

@@ -22,10 +22,10 @@ class TestMealModels:
         self.user = User.objects.create_user(name="staffuser", password="1980")
         self.role, _ = Role.objects.get_or_create(name="正社員")
         self.staff, _ = Staff.objects.get_or_create(
-            user=self.user, full_name="田中太郎", role=self.role
+            user=self.user, name="田中太郎", role=self.role
         )
 
-        self.guest, _ = Guest.objects.get_or_create(full_name="山田花子")
+        self.guest, _ = Guest.objects.get_or_create(name="山田花子")
 
         self.today = date.today()
 
@@ -52,7 +52,7 @@ class TestMealModels:
             ordered=True,
             auto_generated=False,
         )
-        assert order.staff.full_name == "田中太郎"
+        assert order.staff.name == "田中太郎"
         assert str(order) == f"{self.today} - 田中太郎 - 朝 - ○"  # ○ = ◯ = “○”
 
     def test_create_meal_order_for_guest(self):
@@ -68,7 +68,7 @@ class TestMealModels:
             ordered=False,
             auto_generated=True,
         )
-        assert order.guest.full_name == "山田花子"
+        assert order.guest.name == "山田花子"
         assert str(order) == f"{self.today} - 山田花子 - 昼 - ×"  # × = “×”
 
     def test_weekday_jp(self):

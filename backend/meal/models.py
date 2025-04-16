@@ -62,4 +62,4 @@ class MealOrder(models.Model):
 
     def __str__(self):
         target = self.guest or self.staff
-        return f"{self.date} - {target.full_name} - {self.meal_type.name} - {'○' if self.ordered else '×'}"
+        return f"{self.date} - {target.name} - {self.meal_type.name} - {'○' if self.ordered else '×'}"
