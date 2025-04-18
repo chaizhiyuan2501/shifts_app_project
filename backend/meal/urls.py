@@ -4,6 +4,7 @@ from .views import (
     MealTypeDetailAPIView,
     MealOrderListCreateAPIView,
     MealOrderDetailAPIView,
+    MealOrderCountAPIView,
 )
 
 urlpatterns = [
@@ -27,4 +28,6 @@ urlpatterns = [
         MealOrderDetailAPIView.as_view(),
         name="meal-order-detail",
     ),
+    # 食事注文した数の詳細取得､更新
+    path("api/meal-order/count/", MealOrderCountAPIView.as_view()),
 ]

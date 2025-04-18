@@ -1,6 +1,6 @@
 ﻿import pytest
 from rest_framework.test import APIClient
-from django.urls import reverse
+import datetime
 from user.models import User
 from meal.models import MealType, MealOrder
 from guest.models import Guest
@@ -93,3 +93,26 @@ class TestMealViews:
         url = f"/api/meal-orders/{self.order.id}/"
         res = self.client.delete(url)
         assert res.status_code == 204
+
+
+@pytest.mark.django_db
+class TestMealOrderCountAPIView:
+    def setup_method(self):
+        self.client = APIClient()
+
+    def test_meal_order_count_success(self):
+        # 指定した日付に対してPOSTリクエストを送信し、統計が取得できることを確認する
+        target_date = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+        response = self.client.post("/api/meal-order/count/", {"date": target_date}, format="json")
+
+        assert response.status_code == 200
+        assert "guest" in response.data["data"]
+        assert "staff" in response.data["data"]
+        assert "total" in response.data["data"]
+
+    def test_meal_order_count_missing_date(self):
+        # 日付が指定されていない場合、400エラーが返ること
+        response = self.client.post("/api/meal-order/count/", {}, format="json")
+
+        assert response.status_code == 400
+        assert response.data["message"] == "dateは必須です"

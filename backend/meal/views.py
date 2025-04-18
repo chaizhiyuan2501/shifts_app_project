@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework.request import Request
+from django.db.models import Count
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from drf_spectacular.utils import extend_schema
 
 from .models import MealType, MealOrder
-from .serializers import MealTypeSerializer, MealOrderSerializer
+from meal.serializers import GuestMealOrderSerializer, StaffMealOrderSerializer
 from utils.api_response_utils import api_response
 
 
@@ -119,3 +120,58 @@ class MealOrderDetailAPIView(APIView):
             return api_response(code=404, message="見つかりません")
         obj.delete()
         return api_response(code=204, message="削除成功")
+
+
+@extend_schema(summary="指定日付の食事注文数をカウント", tags=["食事管理"])
+class MealOrderCountAPIView(APIView):
+    def post(self, request: Request):
+        """
+        リクエスト例:
+        {
+            "date": "2025-04-20"
+        }
+
+        レスポンス例:
+        {
+            "guest": { "朝食": 5, "昼食": 7, "夕食": 6 },
+            "staff": { "昼食": 3, "夕食": 4 },
+            "total": { "朝食": 5, "昼食": 10, "夕食": 10 }
+        }
+        """
+        date = request.data.get("date")
+        if not date:
+            return api_response(code=400, message="dateは必須です")
+
+        meal_types = MealType.objects.values("id", "name", "display_name")
+        type_map = {m["id"]: m["display_name"] for m in meal_types}
+
+        # 各グループのカウント
+        guest_counts = (
+            MealOrder.objects.filter(date=date, guest__isnull=False)
+            .values("meal_type")
+            .annotate(count=Count("id"))
+        )
+        staff_counts = (
+            MealOrder.objects.filter(date=date, staff__isnull=False)
+            .values("meal_type")
+            .annotate(count=Count("id"))
+        )
+
+        # 整理
+        guest_result = {type_map[g["meal_type"]]: g["count"] for g in guest_counts}
+        staff_result = {type_map[s["meal_type"]]: s["count"] for s in staff_counts}
+
+        # 合計処理
+        total_result = {}
+        for name in set(guest_result.keys()) | set(staff_result.keys()):
+            total_result[name] = guest_result.get(name, 0) + staff_result.get(name, 0)
+
+        return api_response(
+            message="カウント成功",
+            data={
+                "guest": guest_result,
+                "staff": staff_result,
+                "total": total_result,
+            },
+        )
+

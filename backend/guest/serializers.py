@@ -33,7 +33,9 @@ class VisitTypeSerializer(serializers.ModelSerializer):
         """コードは泊・通い・休のいずれかのみ許可"""
         allowed = ["泊", "通い", "休"]
         if value not in allowed:
-            raise serializers.ValidationError(f"コードは {', '.join(allowed)} のいずれかにしてください。")
+            raise serializers.ValidationError(
+                f"コードは {', '.join(allowed)} のいずれかにしてください。"
+            )
         return value
 
     def validate_name(self, value):
@@ -43,14 +45,14 @@ class VisitTypeSerializer(serializers.ModelSerializer):
 
 
 class VisitScheduleSerializer(serializers.ModelSerializer):
-    guest = GuestSerializer(read_only=True)
     guest_id = serializers.PrimaryKeyRelatedField(
         queryset=Guest.objects.all(), source="guest", write_only=True
     )
-    visit = VisitTypeSerializer(read_only=True)
-    visit_id = serializers.PrimaryKeyRelatedField(
-        queryset=VisitType.objects.all(), source="visit", write_only=True
+    visit_type_id = serializers.PrimaryKeyRelatedField(
+        queryset=VisitType.objects.all(), source="visit_type", write_only=True
     )
+    guest = GuestSerializer(read_only=True)
+    visit_type = VisitTypeSerializer(read_only=True)
     weekday = serializers.SerializerMethodField()
 
     class Meta:
@@ -59,11 +61,11 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
             "id",
             "guest",
             "guest_id",
+            "visit_type",
+            "visit_type_id",
             "date",
             "arrive_time",
             "leave_time",
-            "visit",
-            "visit_id",
             "note",
             "weekday",
         ]
@@ -85,7 +87,9 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
         arrive = attrs.get("arrive_time")
         leave = attrs.get("leave_time")
         if arrive and leave and arrive > leave:
-            raise serializers.ValidationError("来所時間は帰宅時間より前でなければなりません。")
+            raise serializers.ValidationError(
+                "来所時間は帰宅時間より前でなければなりません。"
+            )
         return attrs
 
 
@@ -95,5 +99,7 @@ class ScheduleUploadSerializer(serializers.Serializer):
     def validate_image(self, value):
         """画像ファイルの簡易検証"""
         if value.size > 5 * 1024 * 1024:
-            raise serializers.ValidationError("画像サイズが大きすぎます（最大5MBまで）。")
+            raise serializers.ValidationError(
+                "画像サイズが大きすぎます（最大5MBまで）。"
+            )
         return value
