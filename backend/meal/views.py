@@ -6,17 +6,23 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from drf_spectacular.utils import extend_schema
 
 from .models import MealType, MealOrder
-from meal.serializers import GuestMealOrderSerializer, StaffMealOrderSerializer
+from .serializers import (
+    MealTypeSerializer,
+    GuestMealOrderSerializer,
+    StaffMealOrderSerializer,
+)
+
 from utils.api_response_utils import api_response
 
 
-@extend_schema(summary="食事種類一覧", tags=["食事管理"])
-class MealTypeListCreateAPIView(APIView):
+# meal/views.py に追加
+@extend_schema(summary="食事種類一覧と作成", tags=["食事管理"])
+class MealTypeListCreateView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        meal_types = MealType.objects.all()
-        serializer = MealTypeSerializer(meal_types, many=True)
+        queryset = MealType.objects.all()
+        serializer = MealTypeSerializer(queryset, many=True)
         return api_response(data=serializer.data)
 
     def post(self, request):
@@ -30,7 +36,7 @@ class MealTypeListCreateAPIView(APIView):
 
 
 @extend_schema(summary="食事種類詳細", tags=["食事管理"])
-class MealTypeDetailAPIView(APIView):
+class MealTypeDetailView(APIView):
     permission_classes = [IsAdminUser]
 
     def get_object(self, pk):
@@ -54,6 +60,8 @@ class MealTypeDetailAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return api_response(message="更新成功", data=serializer.data)
+        else:
+            print(serializer.errors)
         return api_response(
             code=400, message="バリデーションエラー", data=serializer.errors
         )
@@ -67,16 +75,23 @@ class MealTypeDetailAPIView(APIView):
 
 
 @extend_schema(summary="食事注文一覧", tags=["食事管理"])
-class MealOrderListCreateAPIView(APIView):
+class MealOrderListCreateView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_serializer_class(self, request):
+        if request.user.is_authenticated and hasattr(request.user, "staff"):
+            return StaffMealOrderSerializer
+        return GuestMealOrderSerializer
 
     def get(self, request):
         orders = MealOrder.objects.all()
-        serializer = MealOrderSerializer(orders, many=True)
+        serializer_class = self.get_serializer_class(request)
+        serializer = serializer_class(orders, many=True)
         return api_response(data=serializer.data)
 
     def post(self, request):
-        serializer = MealOrderSerializer(data=request.data)
+        serializer_class = self.get_serializer_class(request)
+        serializer = serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return api_response(code=201, message="作成成功", data=serializer.data)
@@ -86,7 +101,7 @@ class MealOrderListCreateAPIView(APIView):
 
 
 @extend_schema(summary="食事注文詳細", tags=["食事管理"])
-class MealOrderDetailAPIView(APIView):
+class MealOrderDetailView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
@@ -95,18 +110,25 @@ class MealOrderDetailAPIView(APIView):
         except MealOrder.DoesNotExist:
             return None
 
+    def get_serializer_class(self, request):
+        if request.user.is_authenticated and hasattr(request.user, "staff"):
+            return StaffMealOrderSerializer
+        return GuestMealOrderSerializer
+
     def get(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
             return api_response(code=404, message="見つかりません")
-        serializer = MealOrderSerializer(obj)
+        serializer_class = self.get_serializer_class(request)
+        serializer = serializer_class(obj)
         return api_response(data=serializer.data)
 
     def put(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
             return api_response(code=404, message="見つかりません")
-        serializer = MealOrderSerializer(obj, data=request.data)
+        serializer_class = self.get_serializer_class(request)
+        serializer = serializer_class(obj, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return api_response(message="更新成功", data=serializer.data)
@@ -123,7 +145,7 @@ class MealOrderDetailAPIView(APIView):
 
 
 @extend_schema(summary="指定日付の食事注文数をカウント", tags=["食事管理"])
-class MealOrderCountAPIView(APIView):
+class MealOrderCountView(APIView):
     def post(self, request: Request):
         """
         リクエスト例:
@@ -174,4 +196,3 @@ class MealOrderCountAPIView(APIView):
                 "total": total_result,
             },
         )
-

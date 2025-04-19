@@ -1,33 +1,20 @@
 ﻿from django.urls import path
 from .views import (
-    MealTypeListCreateAPIView,
-    MealTypeDetailAPIView,
-    MealOrderListCreateAPIView,
-    MealOrderDetailAPIView,
-    MealOrderCountAPIView,
+    MealTypeListCreateView,
+    MealTypeDetailView,
+    MealOrderListCreateView,
+    MealOrderDetailView,
+    MealOrderCountView,
 )
 
 urlpatterns = [
-    # 食事の種類一覧と新規作成エンドポイント
+    path("meal-types/", MealTypeListCreateView.as_view(), name="meal-type-list-create"),
+    path("meal-types/<int:pk>/", MealTypeDetailView.as_view(), name="meal-type-detail"),
     path(
-        "meal-types/", MealTypeListCreateAPIView.as_view(), name="meal-type-list-create"
+        "meal-orders/", MealOrderListCreateView.as_view(), name="meal-order-list-create"
     ),
-    # 食事の種類の詳細取得・更新・削除エンドポイント（<int:pk>は主キー）
     path(
-        "meal-types/<int:pk>/", MealTypeDetailAPIView.as_view(), name="meal-type-detail"
+        "meal-orders/<int:pk>/", MealOrderDetailView.as_view(), name="meal-order-detail"
     ),
-    # 食事注文一覧と新規注文作成エンドポイント
-    path(
-        "meal-orders/",
-        MealOrderListCreateAPIView.as_view(),
-        name="meal-order-list-create",
-    ),
-    # 食事注文の詳細取得・更新・削除エンドポイント
-    path(
-        "meal-orders/<int:pk>/",
-        MealOrderDetailAPIView.as_view(),
-        name="meal-order-detail",
-    ),
-    # 食事注文した数の詳細取得､更新
-    path("api/meal-order/count/", MealOrderCountAPIView.as_view()),
+    path("meal-order/count/", MealOrderCountView.as_view(), name="meal-order-count"),
 ]
