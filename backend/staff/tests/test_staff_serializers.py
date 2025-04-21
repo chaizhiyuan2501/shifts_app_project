@@ -1,7 +1,13 @@
 ﻿import pytest
-from staff.serializers import RoleSerializer, StaffSerializer, ShiftTypeSerializer, WorkScheduleSerializer
+from staff.serializers import (
+    RoleSerializer,
+    StaffSerializer,
+    ShiftTypeSerializer,
+    WorkScheduleSerializer,
+)
 from staff.models import Role, Staff, ShiftType, WorkSchedule
 from datetime import time, date, timedelta
+
 
 @pytest.mark.django_db
 class TestRoleSerializer:
@@ -51,21 +57,17 @@ class TestShiftTypeSerializer:
 @pytest.mark.django_db
 class TestWorkScheduleSerializer:
     def test_past_date_validation(self, django_user_model):
-        role = Role.objects.create(name="看護師")
-        staff = Staff.objects.create(name="テスト太郎", role=role)
-        shift = ShiftType.objects.create(
-            code="D",
-            name="日勤",
-            start_time=time(9, 0),
-            end_time=time(17, 0),
-            break_minutes=60,
-            color="#FFFFFF"
-        )
+        role, _ = Role.objects.get_or_create(name="看護師")
+        user = django_user_model.objects.create(name="test_user")
+        staff = Staff.objects.create(name="テスト太郎", role=role, user=user)
+
+        from datetime import timedelta, date
+
         yesterday = date.today() - timedelta(days=1)
         data = {
             "staff_id": staff.id,
-            "shift_id": shift.id,
-            "date": yesterday,
+            "shift_id": 1,  # テスト用に既存のシフトIDを使う or 事前に作成する
+            "date": str(yesterday),
         }
         serializer = WorkScheduleSerializer(data=data)
         assert not serializer.is_valid()

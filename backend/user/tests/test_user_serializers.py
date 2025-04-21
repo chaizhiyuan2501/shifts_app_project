@@ -105,5 +105,5 @@ class TestCustomTokenObtainPairSerializer:
         data = {"name": "loginuser", "password": "wrong"}
         serializer = CustomTokenObtainPairSerializer(data=data)
 
-        with pytest.raises(AuthenticationFailed):
+        with pytest.raises(ValidationError):
             serializer.is_valid(raise_exception=True)

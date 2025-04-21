@@ -5,8 +5,13 @@ from datetime import date, time
 
 client = APIClient()
 
+
 @pytest.mark.django_db
 class TestRoleView:
+
+    def setup_method(self):
+        Role.objects.all().delete()
+
     def test_create_role(self, admin_user):
         client.force_authenticate(user=admin_user)
         response = client.post("/api/staff/roles/", {"name": "介護福祉士"})
@@ -14,7 +19,8 @@ class TestRoleView:
         assert response.data["message"] == "職種を登録しました。"
 
     def test_get_role_list(self, admin_user):
-        Role.objects.create(name="看護師")
+        # 既に存在する職種を重複登録しないよう get_or_create を使用
+        Role.objects.get_or_create(name="看護師")
         client.force_authenticate(user=admin_user)
         response = client.get("/api/staff/roles/")
         assert response.status_code == 200
@@ -23,21 +29,26 @@ class TestRoleView:
 
 @pytest.mark.django_db
 class TestStaffView:
+    def setup_method(self):
+        Role.objects.all().delete()
+
     def test_create_staff(self, admin_user):
-        role = Role.objects.create(name="看護師")
+        # 職種を取得または作成
+        role, _ = Role.objects.get_or_create(name="看護師")
         client.force_authenticate(user=admin_user)
-        data = {"name": "山田太郎", "role_id": role.id}
+        data = {"name": "山田太郎", "role_id": role.id, "user_id": admin_user.id}
         response = client.post("/api/staff/staffs/", data)
         assert response.status_code == 201
         assert response.data["data"]["name"] == "山田太郎"
 
     def test_get_staff_detail(self, admin_user):
-        role = Role.objects.create(name="看護師")
-        staff = Staff.objects.create(name="佐藤次郎", role=role)
+        role, _ = Role.objects.get_or_create(name="看護師")
+        # スタッフに管理ユーザーを割り当てる
+        staff = Staff.objects.create(name="テスト太郎", role=role, user=admin_user)
         client.force_authenticate(user=admin_user)
         response = client.get(f"/api/staff/staffs/{staff.id}/")
         assert response.status_code == 200
-        assert response.data["data"]["name"] == "佐藤次郎"
+        assert response.data["data"]["name"] == "テスト太郎"
 
 
 @pytest.mark.django_db
@@ -52,7 +63,8 @@ class TestShiftTypeView:
             "color": "#FF0000",
         }
         client.force_authenticate(user=admin_user)
-        response = client.post("/api/staff/shifts/", data)
+        # 正しいURLへ修正
+        response = client.post("/api/staff/shift-types/", data)
         assert response.status_code == 201
         assert response.data["message"] == "シフト種類を登録しました。"
 
@@ -60,10 +72,15 @@ class TestShiftTypeView:
 @pytest.mark.django_db
 class TestWorkScheduleView:
     def test_create_schedule(self, admin_user):
-        role = Role.objects.create(name="介護士")
-        staff = Staff.objects.create(name="田中", role=role)
+        role, _ = Role.objects.get_or_create(name="介護士")
+        staff = Staff.objects.create(name="テスト太郎", role=role, user=admin_user)
         shift = ShiftType.objects.create(
-            code="A", name="早番", start_time=time(7), end_time=time(15), break_minutes=60, color="#123456"
+            code="A",
+            name="早番",
+            start_time=time(7),
+            end_time=time(15),
+            break_minutes=60,
+            color="#123456",
         )
         data = {"staff_id": staff.id, "shift_id": shift.id, "date": str(date.today())}
         client.force_authenticate(user=admin_user)

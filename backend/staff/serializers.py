@@ -24,6 +24,12 @@ class StaffSerializer(serializers.ModelSerializer):
         model = Staff
         fields = ["id", "name", "role", "role_id", "notes"]
 
+    def create(self, validated_data):
+        # 自動的にログインユーザーを user に割り当てる（明示的に渡されていなければ）
+        if "user" not in validated_data and self.context.get("request"):
+            validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)
+
     def validate_name(self, value):
         """氏名のバリデーション：空欄禁止"""
         if not value.strip():
@@ -57,7 +63,9 @@ class ShiftTypeSerializer(serializers.ModelSerializer):
         if not value.strip():
             raise serializers.ValidationError("シフトコードは必須です。")
         if not value.isalnum():
-            raise serializers.ValidationError("シフトコードは英数字で入力してください。")
+            raise serializers.ValidationError(
+                "シフトコードは英数字で入力してください。"
+            )
         return value
 
     def validate_break_minutes(self, value):

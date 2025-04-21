@@ -199,7 +199,8 @@ class StaffListCreateView(APIView):
         return api_response(data=serializer.data)
 
     def post(self, request):
-        serializer = StaffSerializer(data=request.data)
+        # 🔧 修正：context に request を渡すことで user を自動登録可能にする
+        serializer = StaffSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return api_response(
