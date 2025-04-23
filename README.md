@@ -88,13 +88,6 @@ http://localhost:8000/api/schema/swagger-ui/
 │   ├── guest
 │   │   ├── admin.py
 │   │   ├── apps.py
-│   │   ├── migrations
-│   │   │   ├── 0001_initial.py
-│   │   │   ├── 0002_alter_visittype_arrive_time_and_more.py        
-│   │   │   ├── 0003_alter_guest_options_alter_visitschedule_options_and_more.py
-│   │   │   ├── 0004_remove_visittype_arrive_time_and_more.py       
-│   │   │   ├── 0005_rename_full_name_guest_name.py
-│   │   │   ├── __init__.py
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── signals.py
@@ -112,10 +105,6 @@ http://localhost:8000/api/schema/swagger-ui/
 │   ├── meal
 │   │   ├── admin.py
 │   │   ├── apps.py
-│   │   ├── migrations
-│   │   │   ├── 0001_initial.py
-│   │   │   ├── 0002_force_nullable_staff_guest.py
-│   │   │   ├── __init__.py
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── signals.py
@@ -144,13 +133,6 @@ http://localhost:8000/api/schema/swagger-ui/
 │   ├── staff
 │   │   ├── admin.py
 │   │   ├── apps.py
-│   │   ├── migrations
-│   │   │   ├── 0001_initial.py
-│   │   │   ├── 0002_initial.py
-│   │   │   ├── 0003_alter_role_options_alter_shifttype_options_and_more.py
-│   │   │   ├── 0004_shifttype_break_minutes.py
-│   │   │   ├── 0005_rename_full_name_staff_name.py
-│   │   │   ├── __init__.py
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── signals.py
@@ -165,12 +147,6 @@ http://localhost:8000/api/schema/swagger-ui/
 │   ├── user
 │   │   ├── admin.py
 │   │   ├── apps.py
-│   │   ├── migrations
-│   │   │   ├── 0001_initial.py
-│   │   │   ├── 0002_alter_user_options.py
-│   │   │   ├── 0003_alter_user_is_active.py
-│   │   │   ├── 0004_alter_user_is_active.py
-│   │   │   ├── __init__.py
 │   │   ├── models.py
 │   │   ├── serializers.py
 │   │   ├── signals.py

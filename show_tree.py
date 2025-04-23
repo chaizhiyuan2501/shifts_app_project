@@ -2,7 +2,7 @@
 
 def print_tree(startpath, prefix=""):
     for item in os.listdir(startpath):
-        if item == ".git":
+        if item == ".git" or item == "migrations":
             continue  # 跳过 .git 目录
         path = os.path.join(startpath, item)
         if os.path.isdir(path):
