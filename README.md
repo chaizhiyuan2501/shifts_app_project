@@ -62,6 +62,7 @@ http://localhost:8000/api/schema/swagger-ui/
 
 
 ## ディレクトリ構成
+<pre>
 ├── .pytest_cache
 │   ├── .gitignore
 │   ├── CACHEDIR.TAG
@@ -193,6 +194,7 @@ http://localhost:8000/api/schema/swagger-ui/
 ├── README.md
 ├── show_tree.py
 ├── Todo.md
+</pre>
 
 
 ## 今後の課題
