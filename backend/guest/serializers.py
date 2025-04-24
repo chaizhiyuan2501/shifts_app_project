@@ -5,12 +5,20 @@ from django.utils import timezone
 
 
 class GuestSerializer(serializers.ModelSerializer):
+    """
+    Guest モデルのシリアライザ
+    - 利用者情報のバリデーションと保存用
+    """
+
     class Meta:
         model = Guest
         fields = ["id", "name", "birthday", "contact", "notes"]
 
     def validate_name(self, value):
-        """氏名が空でないかチェック"""
+        """
+        氏名のバリデーション
+        - 空文字や50文字超過をエラーとする
+        """
         if not value.strip():
             raise serializers.ValidationError("氏名は必須です。")
         if len(value) > 50:
@@ -18,19 +26,30 @@ class GuestSerializer(serializers.ModelSerializer):
         return value
 
     def validate_contact(self, value):
-        """連絡先の簡易フォーマットチェック"""
+        """
+        連絡先のバリデーション
+        - 5文字未満の短すぎる連絡先をエラーとする
+        """
         if value and len(value) < 5:
             raise serializers.ValidationError("連絡先が短すぎます。")
         return value
 
 
 class VisitTypeSerializer(serializers.ModelSerializer):
+    """
+    VisitType モデルのシリアライザ
+    - コードと名称のバリデーションを行う
+    """
+
     class Meta:
         model = VisitType
         fields = ["id", "code", "name", "color"]
 
     def validate_code(self, value):
-        """コードは泊・通い・休のいずれかのみ許可"""
+        """
+        コードのバリデーション
+        - 許可された値（泊、通い、休）のみを受け付ける
+        """
         allowed = ["泊", "通い", "休"]
         if value not in allowed:
             raise serializers.ValidationError(
@@ -39,12 +58,23 @@ class VisitTypeSerializer(serializers.ModelSerializer):
         return value
 
     def validate_name(self, value):
+        """
+        名称のバリデーション
+        - 空文字は許可しない
+        """
         if not value.strip():
             raise serializers.ValidationError("来訪種別の名称は必須です。")
         return value
 
 
 class VisitScheduleSerializer(serializers.ModelSerializer):
+    """
+    VisitSchedule モデルのシリアライザ
+    - 関連モデルをIDで受け取り、オブジェクトとして返す
+    - 曜日も取得可能
+    - 来所時間と帰宅時間の整合性を検証
+    """
+
     guest_id = serializers.PrimaryKeyRelatedField(
         queryset=Guest.objects.all(), source="guest", write_only=True
     )
@@ -71,18 +101,24 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
         ]
 
     def get_weekday(self, obj):
-        """曜日の日本語を返す"""
+        """
+        曜日（日本語）の取得
+        """
         return get_weekday_jp(obj.date)
 
-    def validate_date(self, value):
-        """未来の日付は登録不可"""
-        if value > timezone.now().date():
-            raise serializers.ValidationError("未来の日付は登録できません。")
-        return value
+    # def validate_date(self, value):
+    #     """
+    #     日付のバリデーション
+    #     - 未来日付は禁止
+    #     """
+    #     if value > timezone.now().date():
+    #         raise serializers.ValidationError("未来の日付は登録できません。")
+    #     return value
 
     def validate(self, attrs):
         """
-        来所時間と帰宅時間の整合性をチェック（どちらかのみ存在、または順序逆転は不可）
+        来所時間と帰宅時間の整合性チェック
+        - どちらかのみ入力された場合、または来所 > 帰宅の順序エラーを検出
         """
         arrive = attrs.get("arrive_time")
         leave = attrs.get("leave_time")
@@ -94,10 +130,17 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
 
 
 class ScheduleUploadSerializer(serializers.Serializer):
+    """
+    スケジュール画像アップロード用シリアライザ
+    - 最大5MBの画像サイズ制限あり
+    """
+
     image = serializers.ImageField()
 
     def validate_image(self, value):
-        """画像ファイルの簡易検証"""
+        """
+        アップロード画像のサイズ検証
+        """
         if value.size > 5 * 1024 * 1024:
             raise serializers.ValidationError(
                 "画像サイズが大きすぎます（最大5MBまで）。"

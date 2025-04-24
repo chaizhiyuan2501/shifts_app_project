@@ -1,10 +1,12 @@
 from django.db import models
-
 from utils.date_utils import get_weekday_jp
 
 
 class Guest(models.Model):
-    """利用者情報"""
+    """
+    利用者情報モデル
+    - 氏名、生年月日、連絡先、備考を保持
+    """
 
     name = models.CharField(max_length=50, verbose_name="氏名")
     birthday = models.DateField(null=True, blank=True, verbose_name="生年月日")
@@ -20,14 +22,13 @@ class Guest(models.Model):
 
 
 class VisitType(models.Model):
-    """来訪種別（泊、通い、休み など）"""
+    """
+    来訪種別モデル（泊・通い・休みなど）
+    - コード（例: 泊）とその日本語表記・色を管理
+    """
 
-    code = models.CharField(
-        max_length=10, unique=True, verbose_name="コード"
-    )  # 例：泊、通い、休
-    name = models.CharField(
-        max_length=50, verbose_name="来訪種別"
-    )  # 例：泊まり、通い、休み
+    code = models.CharField(max_length=10, unique=True, verbose_name="コード")
+    name = models.CharField(max_length=50, verbose_name="来訪種別")
     color = models.CharField(max_length=10, default="#cccccc", verbose_name="色コード")
 
     class Meta:
@@ -39,7 +40,11 @@ class VisitType(models.Model):
 
 
 class VisitSchedule(models.Model):
-    """利用者の来訪スケジュール（1人1日1件）"""
+    """
+    来訪スケジュールモデル
+    - 利用者と日付のユニーク制約あり（1人1日1件）
+    - 来所時間と帰宅時間も保持
+    """
 
     guest = models.ForeignKey(Guest, on_delete=models.CASCADE, verbose_name="利用者")
     visit_type = models.ForeignKey(
@@ -53,12 +58,12 @@ class VisitSchedule(models.Model):
     @property
     def weekday_jp(self):
         """
-        指定した日付の曜日を日本語で返す
+        日付の曜日（日本語）を返す
         """
         return get_weekday_jp(self.date)
 
     class Meta:
-        unique_together = ("guest", "date")
+        unique_together = ("guest", "date")  # 同じ利用者・同日で重複不可
         ordering = ["date"]
         verbose_name = "来訪スケジュール"
         verbose_name_plural = "来訪スケジュール"

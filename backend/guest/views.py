@@ -16,11 +16,10 @@ from .serializers import (
     ScheduleUploadSerializer,
 )
 
+# 各APIビューの役割や処理内容は関数ごとに詳細な説明あり
+# ここでは主要なビュークラスに日本語コメントを挿入し、理解を補助
 
-# ========================================
-# 利用者（Guest）API
-# ========================================
-
+# 利用者（Guest）一覧・新規登録用ビュー
 class GuestListCreateView(APIView):
     """
     利用者の一覧取得と新規登録を行うAPIビュー
@@ -48,6 +47,7 @@ class GuestListCreateView(APIView):
         return api_response(code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors)
 
 
+# 利用者詳細取得・編集・削除ビュー
 class GuestDetailView(APIView):
     """
     利用者の詳細取得・更新・削除を行うAPIビュー
@@ -88,10 +88,7 @@ class GuestDetailView(APIView):
         return api_response(message="削除成功", code=status.HTTP_204_NO_CONTENT)
 
 
-# ========================================
-# 来訪種別（VisitType）API
-# ========================================
-
+# 来訪種別（VisitType）一覧・新規登録ビュー
 class VisitTypeListCreateView(APIView):
     """
     来訪種別（泊まり、通い、休みなど）の一覧取得・新規登録用APIビュー
@@ -119,6 +116,7 @@ class VisitTypeListCreateView(APIView):
         return api_response(code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors)
 
 
+# 来訪種別の詳細操作ビュー
 class VisitTypeDetailView(APIView):
     """
     来訪種別の詳細取得・更新・削除を行うAPIビュー
@@ -159,10 +157,7 @@ class VisitTypeDetailView(APIView):
         return api_response(message="削除成功", code=status.HTTP_204_NO_CONTENT)
 
 
-# ========================================
-# スケジュール（VisitSchedule）API
-# ========================================
-
+# スケジュール（VisitSchedule）の一覧・新規登録ビュー
 class VisitScheduleListCreateView(APIView):
     """
     利用者の来訪スケジュール一覧取得・登録用APIビュー
@@ -190,6 +185,7 @@ class VisitScheduleListCreateView(APIView):
         return api_response(code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors)
 
 
+# スケジュール詳細取得・更新・削除ビュー
 class VisitScheduleDetailView(APIView):
     """
     スケジュールの詳細取得・更新・削除を行うAPIビュー
@@ -230,10 +226,7 @@ class VisitScheduleDetailView(APIView):
         return api_response(message="削除成功", code=status.HTTP_204_NO_CONTENT)
 
 
-# ========================================
-# OCRによるスケジュール画像解析
-# ========================================
-
+# スケジュール画像OCR登録API
 @extend_schema(
     summary="画像からスケジュールを登録する",
     description="画像からAI-OCRによりスケジュール情報を抽出し、自動でDBに保存します。",
@@ -247,7 +240,7 @@ class ScheduleUploadView(APIView):
 
     def post(self, request, *args, **kwargs):
         """
-        画像をアップロードしてOCR処理を実行する
+        アップロード画像をOCR処理し、スケジュールを自動登録する
         """
         serializer = ScheduleUploadSerializer(data=request.data)
         if not serializer.is_valid():
@@ -259,12 +252,10 @@ class ScheduleUploadView(APIView):
 
         image_file = serializer.validated_data["image"]
 
-        # 一時ファイルに保存（PILとOpenCV両方対応のため）
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
             temp_file.write(image_file.read())
             temp_path = temp_file.name
 
-        # OCR処理とDB登録
         processor = ScheduleOCRProcessor(temp_path)
         result = processor.run()
 
