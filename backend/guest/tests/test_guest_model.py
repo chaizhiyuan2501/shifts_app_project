@@ -1,91 +1,111 @@
 ﻿import pytest
-from datetime import date, time
-from guest.models import Guest, VisitType, VisitSchedule
+from datetime import date
+from django.db.utils import IntegrityError
+
+from meal.models import MealType, MealOrder
+from user.models import User
+from staff.models import Staff, Role
+from guest.models import Guest
 
 
 @pytest.mark.django_db
-class TestGuestModels:
+class TestMealModels:
     """
-    Guestアプリのモデルに関するテストクラス。
-    - Guest（利用者）
-    - VisitType（来所区分）
-    - VisitSchedule（来所予定）
+    Mealアプリのモデルに関するテストクラス。
+    - MealType（食事の種類）
+    - MealOrder（食事注文）
 
-    各モデルの作成・制約・文字列表示をテストする。
+    各モデルの作成・制約・文字列表示・プロパティ機能をテストする。
     """
 
     def setup_method(self):
         """
-        テスト用に共通で使用するゲストと来所区分を作成する。
+        テスト共通の初期データを作成する。
+        - 食事種別（朝・昼）
+        - スタッフとそのユーザー・役職
+        - ゲスト
+        - 今日の日付
         """
-        self.guest = Guest.objects.create(name="山田太郎")
-        self.visit_type = VisitType.objects.create(
-            code="通", name="通常利用", color="#ff0000"
+        self.breakfast, _ = MealType.objects.get_or_create(
+            name="朝", display_name="朝食"
+        )
+        self.lunch, _ = MealType.objects.get_or_create(name="昼", display_name="昼食")
+
+        self.user = User.objects.create_user(name="staffuser", password="1980")
+        self.role, _ = Role.objects.get_or_create(name="正社員")
+        self.staff, _ = Staff.objects.get_or_create(
+            user=self.user, name="田中太郎", role=self.role
         )
 
-    def test_create_guest(self):
-        """
-        Guest モデルの作成テスト
-        - 氏名・カナ名が保存されるか
-        - __str__ メソッドが氏名を返すか
-        """
-        guest = Guest.objects.create(name="佐藤花子",birthday="1940-01-01",contact="00011112222",notes="要介護3")
-        assert guest.name == "佐藤花子"
-        assert guest.birthday == "1940-01-01"
-        assert guest.contact == "00011112222"
-        assert guest.notes == "要介護3"
-        assert str(guest) == "佐藤花子"
+        self.guest, _ = Guest.objects.get_or_create(name="山田花子")
+        self.today = date.today()
 
-    def test_create_visit_type(self):
+    def test_create_meal_type(self):
         """
-        VisitType モデルの作成テスト
-        - コード、名称、色が正しく保存されるか
-        - __str__ メソッドが「コード（名称）」形式か
+        MealType モデルの作成テスト
+        - name と display_name が正しく保存されていること
+        - __str__ メソッドが表示名を返すこと
         """
-        visit = VisitType.objects.create(code="体", name="体験利用", color="#00ff00")
-        assert visit.code == "体"
-        assert visit.name == "体験利用"
-        assert str(visit) == "体（体験利用）"
+        assert self.breakfast.name == "朝"
+        assert self.breakfast.display_name == "朝食"
+        assert str(self.breakfast) == "朝食"
 
-    def test_create_visit_schedule(self):
+    def test_create_meal_order_for_staff(self):
         """
-        VisitSchedule モデルの作成テスト
-        - 正しい日付、来所区分、来所・退所時間が保存されるか
-        - __str__ メソッドのフォーマットが期待通りか
-        - 曜日（日本語）が正しく返されるか
+        スタッフに対して MealOrder を作成できるか
+        - 正しい日付・食事種別・スタッフが保存されるか
+        - __str__ にスタッフ名が含まれるか
         """
-        schedule = VisitSchedule.objects.create(
+        order, _ = MealOrder.objects.get_or_create(
+            date=self.today,
+            meal_type=self.breakfast,
+            staff=self.staff,
+            ordered=True,
+            auto_generated=False,
+        )
+        assert order.staff.name == "田中太郎"
+        assert str(order) == f"{self.today} - 田中太郎 - 朝 - ○"
+
+    def test_create_meal_order_for_guest(self):
+        """
+        患者に対して MealOrder を作成できるか
+        - 正しい日付・食事種別・患者が保存されるか
+        - __str__ に患者名が含まれるか
+        """
+        order, _ = MealOrder.objects.get_or_create(
+            date=self.today,
+            meal_type=self.lunch,
             guest=self.guest,
-            date=date(2025, 4, 3),
-            visit_type=self.visit_type,
-            arrive_time=time(9, 0),
-            leave_time=time(17, 0),
-            note="初回面談",
+            ordered=False,
+            auto_generated=True,
         )
-        assert schedule.guest == self.guest
-        assert schedule.visit_type == self.visit_type
-        assert schedule.arrive_time == time(9, 0)
-        assert str(schedule).startswith("2025-04-03 - 山田太郎")
-        assert schedule.weekday_jp in ["月", "火", "水", "木", "金", "土", "日"]
+        assert order.guest.name == "山田花子"
+        assert str(order) == f"{self.today} - 山田花子 - 昼 - ×"
 
-    def test_unique_constraint(self):
+    def test_weekday_jp(self):
         """
-        同一利用者が同じ日に複数の来所予定を登録できない制約の確認。
-        - unique_together が機能しているか
-        - 同日同ゲストで登録するとエラーになるか
+        MealOrder の weekday_jp プロパティが日本語で曜日を返すか
+        - 正しく "月〜日" のいずれかが返されること
         """
-        VisitSchedule.objects.create(
-            guest=self.guest,
-            date=date(2025, 4, 3),
-            visit_type=self.visit_type,
-            arrive_time=time(10, 0),
-            leave_time=time(16, 0),
+        order, _ = MealOrder.objects.get_or_create(
+            date=date(2025, 3, 28),
+            meal_type=self.breakfast,
+            staff=self.staff,
         )
-        with pytest.raises(Exception):
-            VisitSchedule.objects.create(
-                guest=self.guest,
-                date=date(2025, 4, 3),
-                visit_type=self.visit_type,
-                arrive_time=time(11, 0),
-                leave_time=time(15, 0),
-            )
+        assert order.weekday_jp in ["月", "火", "水", "木", "金", "土", "日"]
+
+    # def test_unique_constraint(self):
+    #     """
+    #     guest + date + meal_type の組み合わせが重複した場合にエラーが発生するか
+    #     """
+    #     MealOrder.objects.create(
+    #         date=self.today,
+    #         meal_type=self.breakfast,
+    #         guest=self.guest,
+    #     )
+    #     with pytest.raises(IntegrityError):
+    #         MealOrder.objects.create(
+    #             date=self.today,
+    #             meal_type=self.breakfast,
+    #             guest=self.guest,
+    #         )

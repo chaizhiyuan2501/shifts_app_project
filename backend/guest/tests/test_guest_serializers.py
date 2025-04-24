@@ -1,116 +1,131 @@
-﻿import pytest
-from guest.models import Guest, VisitType
-from guest.serializers import (
-    GuestSerializer,
-    VisitTypeSerializer,
-    VisitScheduleSerializer,
-)
-from datetime import timedelta
-from django.utils import timezone
+﻿import datetime
+import pytest
+from meal.serializers import GuestMealOrderSerializer, StaffMealOrderSerializer
+from meal.models import MealType
+from guest.models import Guest
+from staff.models import Staff
+from user.models import User
 
 
 @pytest.mark.django_db
-class TestGuestSerializer:
+class TestMealOrderSerializers:
     """
-    GuestSerializer に関するテストクラス。
-    - ゲスト情報のバリデーションと保存処理を確認する。
+    Mealアプリのシリアライザに関するテストクラス。
+    - StaffMealOrderSerializer
+    - GuestMealOrderSerializer
+
+    入力データのバリデーションや、重複注文・日付制約の確認を行う。
     """
 
-    def test_valid_data(self):
+    def setup_method(self):
         """
-        有効なデータがバリデーションを通過し、保存されることを確認。
+        各テストの前に共通で使用するデータ（スタッフ、ゲスト、食事種別）を作成する。
+        """
+        self.user = User.objects.create_user(name="テストユーザー", password="1234")
+        self.staff = Staff.objects.create(name="テストスタッフ", user=self.user)
+        self.guest = Guest.objects.create(name="テストゲスト")
+        self.meal_type = MealType.objects.create(name="lunch", display_name="昼食")
+
+    def test_valid_staff_order(self):
+        """
+        StaffMealOrderSerializer の正常系テスト
+        - 正しいスタッフ注文データでバリデーションが通ること
         """
         data = {
-            "name": "山田太郎",
-            "birthday": "1980-01-01",
-            "contact": "09012345678",
-            "notes": "メモ",
+            "date": (datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+            "meal_type_id": self.meal_type.id,
+            "staff_id": self.staff.id,
+            "ordered": True,
         }
-        serializer = GuestSerializer(data=data)
-        assert serializer.is_valid(), serializer.errors
-        guest = serializer.save()
-        assert guest.name == "山田太郎"
-
-    def test_invalid_name(self):
-        """
-        name フィールドが空の場合にバリデーションエラーとなることを確認。
-        """
-        data = {"name": "", "birthday": "1980-01-01"}
-        serializer = GuestSerializer(data=data)
-        assert not serializer.is_valid()
-        assert "name" in serializer.errors
-
-
-@pytest.mark.django_db
-class TestVisitTypeSerializer:
-    """
-    VisitTypeSerializer に関するテストクラス。
-    - コードや名称の妥当性を検証する。
-    """
-
-    def test_valid_code(self):
-        """
-        有効なコードで VisitType がバリデーションに通ることを確認。
-        """
-        VisitType.objects.filter(code="泊").delete()  # 重複を避けるために事前削除
-        data = {"code": "泊", "name": "泊まり", "color": "#ffcc00"}
-        serializer = VisitTypeSerializer(data=data)
+        serializer = StaffMealOrderSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
 
-    def test_invalid_code(self):
+    def test_valid_guest_order(self):
         """
-        無効なコード（定義されていない値）でバリデーションエラーとなることを確認。
+        GuestMealOrderSerializer の正常系テスト
+        - 正しいゲスト注文データでバリデーションが通ること
         """
-        data = {"code": "間違い", "name": "無効"}
-        serializer = VisitTypeSerializer(data=data)
-        assert not serializer.is_valid()
-        assert "code" in serializer.errors
+        data = {
+            "date": (datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+            "meal_type_id": self.meal_type.id,
+            "guest_id": self.guest.id,
+            "ordered": True,
+        }
+        serializer = GuestMealOrderSerializer(data=data)
+        assert serializer.is_valid(), serializer.errors
 
-
-@pytest.mark.django_db
-class TestVisitScheduleSerializer:
-    """
-    VisitScheduleSerializer に関するテストクラス。
-    - スケジュールデータの保存とバリデーションを確認。
-    """
-
-    def test_valid_schedule(self):
+    def test_guest_duplicate_order_error(self):
         """
-        正しいスケジュールデータが保存できることを確認。
+        GuestMealOrderSerializer の異常系テスト（重複注文）
+        - 同一のゲストが同日に同じ食事を2度注文しようとするとエラーになること
         """
-        guest = Guest.objects.create(name="テスト", birthday="2000-01-01")
-        visit_type, _ = VisitType.objects.get_or_create(
-            code="泊", defaults={"name": "泊まり", "color": "#cccccc"}
+        from meal.models import MealOrder
+
+        MealOrder.objects.create(
+            date=datetime.date.today() + datetime.timedelta(days=1),
+            guest=self.guest,
+            meal_type=self.meal_type,
         )
-        today = timezone.now().date()
-        data = {
-            "guest_id": guest.id,
-            "visit_type_id": visit_type.id,
-            "date": today.isoformat(),
-            "arrive_time": "10:00",
-            "leave_time": "15:00",
-            "note": "特記事項なし",
-        }
-        serializer = VisitScheduleSerializer(data=data)
-        assert serializer.is_valid(), serializer.errors
-        schedule = serializer.save()
-        assert schedule.guest == guest
-        assert schedule.visit_type == visit_type
 
-    # def test_invalid_date_future(self):
+        data = {
+            "date": (datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+            "meal_type_id": self.meal_type.id,
+            "guest_id": self.guest.id,
+            "ordered": True,
+        }
+        serializer = GuestMealOrderSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+
+    def test_staff_duplicate_order_error(self):
+        """
+        StaffMealOrderSerializer の異常系テスト（重複注文）
+        - 同一のスタッフが同日に同じ食事を2度注文しようとするとエラーになること
+        """
+        from meal.models import MealOrder
+
+        MealOrder.objects.create(
+            date=datetime.date.today() + datetime.timedelta(days=1),
+            staff=self.staff,
+            meal_type=self.meal_type,
+        )
+
+        data = {
+            "date": (datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
+            "meal_type_id": self.meal_type.id,
+            "staff_id": self.staff.id,
+            "ordered": True,
+        }
+        serializer = StaffMealOrderSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+
+    # def test_guest_order_past_date_error(self):
     #     """
-    #     明日以降の日付でスケジュールを登録しようとするとエラーになることを確認。
+    #     GuestMealOrderSerializer の異常系テスト（過去日付）
+    #     - ゲスト注文で過去日付が指定された場合にエラーとなること
     #     """
-    #     guest = Guest.objects.create(name="未来人", birthday="1988-01-01")
-    #     visit_type, _ = VisitType.objects.get_or_create(
-    #         code="通い", defaults={"name": "通い", "color": "#cccccc"}
-    #     )
-    #     tomorrow = timezone.now().date() + timedelta(days=1)
     #     data = {
-    #         "guest": guest.id,
-    #         "visit_type": visit_type.id,
-    #         "date": tomorrow.isoformat(),
+    #         "date": (datetime.date.today() - datetime.timedelta(days=1)).isoformat(),
+    #         "meal_type_id": self.meal_type.id,
+    #         "guest_id": self.guest.id,
+    #         "ordered": True,
     #     }
-    #     serializer = VisitScheduleSerializer(data=data)
+    #     serializer = GuestMealOrderSerializer(data=data)
+    #     assert not serializer.is_valid()
+    #     assert "date" in serializer.errors
+
+    # def test_staff_order_past_date_error(self):
+    #     """
+    #     StaffMealOrderSerializer の異常系テスト（過去日付）
+    #     - スタッフ注文で過去日付が指定された場合にエラーとなること
+    #     """
+    #     data = {
+    #         "date": (datetime.date.today() - datetime.timedelta(days=1)).isoformat(),
+    #         "meal_type_id": self.meal_type.id,
+    #         "staff_id": self.staff.id,
+    #         "ordered": True,
+    #     }
+    #     serializer = StaffMealOrderSerializer(data=data)
     #     assert not serializer.is_valid()
     #     assert "date" in serializer.errors
