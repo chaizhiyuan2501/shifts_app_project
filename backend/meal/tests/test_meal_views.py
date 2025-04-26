@@ -158,7 +158,12 @@ class TestMealOrderCountAPIView:
     """
 
     def setup_method(self):
+        User.objects.all().delete()
         self.client = APIClient()
+        self.admin = User.objects.create_user(
+            name="admin", password="adminpass", is_staff=True, is_active=True
+        )
+        self.client.force_authenticate(user=self.admin)
 
     def test_meal_order_count_success(self):
         """

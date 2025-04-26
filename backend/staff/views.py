@@ -1,10 +1,10 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 from .models import ShiftType, Staff, Role, WorkSchedule
@@ -17,11 +17,13 @@ from .serializers import (
 from utils.api_response_utils import api_response
 
 
-# 夜勤シフトの自動割り当てAPI
+# ================================================================
+# 夜勤シフト自動割り当て（3 連続：夜 -> 明け -> 休み）
+# ================================================================
 @extend_schema(
     operation_id="AssignNightShift",
     summary="夜勤シフトの自動割り当て",
-    description="指定されたスタッフに対し、夜勤・明け・休みシフトを連続登録します。",
+    description="指定スタッフに『夜勤→明け→休み』のシフトを 3 日連続で登録します。",
     tags=["スタッフ管理"],
     responses={
         201: OpenApiResponse(description="夜勤シフト作成成功"),
@@ -30,9 +32,7 @@ from utils.api_response_utils import api_response
 )
 @api_view(["POST"])
 def assign_night_shift(request):
-    """
-    指定スタッフに夜勤、明け、休みのシフトを3日連続で登録するAPI。
-    """
+    """夜勤→明け→休み の 3 連続シフトを自動登録するエンドポイント"""
     try:
         staff = Staff.objects.get(pk=request.data["staff_id"])
         night_date = datetime.strptime(request.data["night_date"], "%Y-%m-%d").date()
@@ -41,33 +41,36 @@ def assign_night_shift(request):
             {"error": "データが不正です"}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    shift_night = ShiftType.objects.get(code="夜")
-    shift_after = ShiftType.objects.get(code="明")
-    shift_rest = ShiftType.objects.get(code="休")
+    # シフト種類を取得
+    shift_map = [
+        (0, ShiftType.objects.get(code="夜")),
+        (1, ShiftType.objects.get(code="明")),
+        (2, ShiftType.objects.get(code="休")),
+    ]
 
     results = []
-
-    for offset, shift in zip(range(3), [shift_night, shift_after, shift_rest]):
-        target_date = night_date + timedelta(days=offset)
+    for offset, shift in shift_map:
+        target = night_date + timedelta(days=offset)
         obj, created = WorkSchedule.objects.update_or_create(
-            staff=staff, date=target_date, defaults={"shift": shift}
+            staff=staff, date=target, defaults={"shift": shift}
         )
-        results.append({"date": target_date, "shift": shift.code, "created": created})
+        results.append({"date": target, "shift": shift.code, "created": created})
 
     return Response(
-        {
-            "message": "夜勤シフトおよび翌日・翌々日のシフトを登録しました。",
-            "schedule": results,
-        },
+        {"message": "夜勤シフト 3 日分を登録しました。", "schedule": results},
         status=status.HTTP_201_CREATED,
     )
 
 
-# ===== Role モデル用のCRUD API =====
-
-
+# ================================================================
+# Role（職種）CRUD
+# ================================================================
 class RoleListCreateView(APIView):
+    """職種一覧取得・新規登録"""
+
     permission_classes = [IsAdminUser]
+    model = Role
+    serializer_class = RoleSerializer
 
     @extend_schema(
         operation_id="RoleList",
@@ -76,115 +79,358 @@ class RoleListCreateView(APIView):
         responses={200: OpenApiResponse(description="職種一覧取得成功")},
     )
     def get(self, request):
-        """
-        職種(Role)の一覧を取得するAPI。
-        """
-        roles = Role.objects.all()
-        serializer = RoleSerializer(roles, many=True)
-        return api_response(data=serializer.data)
+        roles = self.model.objects.all()
+        ser = self.serializer_class(roles, many=True)
+        return api_response(data=ser.data)
 
     @extend_schema(
         operation_id="RoleCreate",
         summary="職種新規登録",
         tags=["スタッフ管理"],
-        request=RoleSerializer,
+        request=RoleSerializer,  # 登録に必要な項目を前端に示す
         responses={
             201: OpenApiResponse(description="職種作成成功"),
             400: OpenApiResponse(description="バリデーションエラー"),
         },
     )
     def post(self, request):
-        """
-        新しい職種(Role)を登録するAPI。
-        """
-        serializer = RoleSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return api_response(
-                code=201,
-                status_code=status.HTTP_201_CREATED,
-                message="職種を登録しました。",
-                data=serializer.data,
-            )
-        return api_response(
-            code=400,
-            status_code=status.HTTP_400_BAD_REQUEST,
-            message="バリデーションエラー",
-            data=serializer.errors,
-        )
+        ser = self.serializer_class(data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return api_response(code=201, message="職種を登録しました。", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
 
 
 class RoleDetailView(APIView):
+    """職種詳細・更新・削除"""
+
     permission_classes = [IsAdminUser]
+    model = Role
+    serializer_class = RoleSerializer
 
     def get_object(self, pk):
-        """
-        指定したIDの職種(Role)オブジェクトを取得する内部メソッド。
-        """
-        return get_object_or_404(Role, pk=pk)
+        """存在チェックを含む取得ヘルパー"""
+        return get_object_or_404(self.model, pk=pk)
 
     @extend_schema(
         operation_id="RoleRetrieve",
         summary="職種詳細取得",
         tags=["スタッフ管理"],
         responses={
-            200: OpenApiResponse(description="職種詳細取得成功"),
-            404: OpenApiResponse(description="該当職種が存在しない"),
+            200: OpenApiResponse(description="取得成功"),
+            404: OpenApiResponse(description="存在しない"),
         },
     )
     def get(self, request, pk):
-        """
-        特定の職種(Role)の詳細情報を取得するAPI。
-        """
-        role = self.get_object(pk)
-        serializer = RoleSerializer(role)
-        return api_response(data=serializer.data)
+        ser = self.serializer_class(self.get_object(pk))
+        return api_response(data=ser.data)
 
     @extend_schema(
         operation_id="RoleUpdate",
-        summary="職種情報更新",
+        summary="職種更新",
         tags=["スタッフ管理"],
         request=RoleSerializer,
         responses={
-            200: OpenApiResponse(description="職種更新成功"),
+            200: OpenApiResponse(description="更新成功"),
             400: OpenApiResponse(description="バリデーションエラー"),
         },
     )
     def put(self, request, pk):
-        """
-        特定の職種(Role)情報を更新するAPI。
-        """
         role = self.get_object(pk)
-        serializer = RoleSerializer(role, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return api_response(
-                message="職種情報を更新しました。", data=serializer.data
-            )
-        return api_response(
-            code=400,
-            status_code=status.HTTP_400_BAD_REQUEST,
-            message="バリデーションエラー",
-            data=serializer.errors,
-        )
+        ser = self.serializer_class(role, data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return api_response(message="更新成功", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
 
     @extend_schema(
         operation_id="RoleDelete",
         summary="職種削除",
         tags=["スタッフ管理"],
         responses={
-            204: OpenApiResponse(description="職種削除成功"),
-            404: OpenApiResponse(description="該当職種が存在しない"),
+            204: OpenApiResponse(description="削除成功"),
+            404: OpenApiResponse(description="存在しない"),
         },
     )
     def delete(self, request, pk):
-        """
-        特定の職種(Role)を削除するAPI。
-        """
-        role = self.get_object(pk)
-        role.delete()
-        return api_response(
-            message="職種を削除しました。",
-            code=204,
-            status_code=status.HTTP_204_NO_CONTENT,
-        )
+        self.get_object(pk).delete()
+        return api_response(message="削除成功", code=204)
+
+
+# ================================================================
+# ShiftType（シフト種類）CRUD
+# ================================================================
+class ShiftTypeListCreateView(APIView):
+    """シフト種類一覧・新規登録"""
+
+    permission_classes = [IsAdminUser]
+    model = ShiftType
+    serializer_class = ShiftTypeSerializer
+
+    @extend_schema(
+        operation_id="ShiftTypeList",
+        summary="シフト種類一覧取得",
+        tags=["スタッフ管理"],
+        responses={200: OpenApiResponse(description="一覧取得成功")},
+    )
+    def get(self, request):
+        ser = self.serializer_class(self.model.objects.all(), many=True)
+        return api_response(data=ser.data)
+
+    @extend_schema(
+        operation_id="ShiftTypeCreate",
+        summary="シフト種類新規登録",
+        tags=["スタッフ管理"],
+        request=ShiftTypeSerializer,
+        responses={
+            201: OpenApiResponse(description="シフト種類を登録しました。"),
+            400: OpenApiResponse(description="バリデーションエラー"),
+        },
+    )
+    def post(self, request):
+        ser = self.serializer_class(data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return api_response(code=201, message="シフト種類を登録しました。", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
+
+
+class ShiftTypeDetailView(APIView):
+    """シフト種類詳細・更新・削除"""
+
+    permission_classes = [IsAdminUser]
+    model = ShiftType
+    serializer_class = ShiftTypeSerializer
+
+    def get_object(self, pk):
+        return get_object_or_404(self.model, pk=pk)
+
+    @extend_schema(
+        operation_id="ShiftTypeRetrieve",
+        summary="シフト種類詳細取得",
+        tags=["スタッフ管理"],
+        responses={
+            200: OpenApiResponse(description="取得成功"),
+            404: OpenApiResponse(description="存在しない"),
+        },
+    )
+    def get(self, request, pk):
+        ser = self.serializer_class(self.get_object(pk))
+        return api_response(data=ser.data)
+
+    @extend_schema(
+        operation_id="ShiftTypeUpdate",
+        summary="シフト種類更新",
+        tags=["スタッフ管理"],
+        request=ShiftTypeSerializer,
+        responses={
+            200: OpenApiResponse(description="更新成功"),
+            400: OpenApiResponse(description="バリデーションエラー"),
+        },
+    )
+    def put(self, request, pk):
+        shift = self.get_object(pk)
+        ser = self.serializer_class(shift, data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return api_response(message="更新成功", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
+
+    @extend_schema(
+        operation_id="ShiftTypeDelete",
+        summary="シフト種類削除",
+        tags=["スタッフ管理"],
+        responses={
+            204: OpenApiResponse(description="削除成功"),
+            404: OpenApiResponse(description="存在しない"),
+        },
+    )
+    def delete(self, request, pk):
+        self.get_object(pk).delete()
+        return api_response(message="削除成功", code=204)
+
+
+# ================================================================
+# Staff CRUD
+# ================================================================
+class StaffListCreateView(APIView):
+    """スタッフ一覧・新規登録"""
+
+    permission_classes = [IsAdminUser]
+    model = Staff
+    serializer_class = StaffSerializer
+
+    @extend_schema(
+        operation_id="StaffList",
+        summary="スタッフ一覧取得",
+        tags=["スタッフ管理"],
+        responses={200: OpenApiResponse(description="一覧取得成功")},
+    )
+    def get(self, request):
+        ser = self.serializer_class(self.model.objects.all(), many=True)
+        return api_response(data=ser.data)
+
+    @extend_schema(
+        operation_id="StaffCreate",
+        summary="スタッフ新規登録",
+        tags=["スタッフ管理"],
+        request=StaffSerializer,
+        responses={
+            201: OpenApiResponse(description="作成成功"),
+            400: OpenApiResponse(description="バリデーションエラー"),
+        },
+    )
+    def post(self, request):
+        ser = self.serializer_class(data=request.data, context={"request": request})
+        if ser.is_valid():
+            ser.save()
+            return api_response(code=201, message="登録成功", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
+
+
+class StaffDetailView(APIView):
+    """スタッフ詳細・更新・削除"""
+
+    permission_classes = [IsAdminUser]
+    model = Staff
+    serializer_class = StaffSerializer
+
+    def get_object(self, pk):
+        return get_object_or_404(self.model, pk=pk)
+
+    @extend_schema(
+        operation_id="StaffRetrieve",
+        summary="スタッフ詳細取得",
+        tags=["スタッフ管理"],
+        responses={
+            200: OpenApiResponse(description="取得成功"),
+            404: OpenApiResponse(description="存在しない"),
+        },
+    )
+    def get(self, request, pk):
+        ser = self.serializer_class(self.get_object(pk))
+        return api_response(data=ser.data)
+
+    @extend_schema(
+        operation_id="StaffUpdate",
+        summary="スタッフ更新",
+        tags=["スタッフ管理"],
+        request=StaffSerializer,
+        responses={
+            200: OpenApiResponse(description="更新成功"),
+            400: OpenApiResponse(description="バリデーションエラー"),
+        },
+    )
+    def put(self, request, pk):
+        staff = self.get_object(pk)
+        ser = self.serializer_class(staff, data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return api_response(message="更新成功", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
+
+    @extend_schema(
+        operation_id="StaffDelete",
+        summary="スタッフ削除",
+        tags=["スタッフ管理"],
+        responses={
+            204: OpenApiResponse(description="削除成功"),
+            404: OpenApiResponse(description="存在しない"),
+        },
+    )
+    def delete(self, request, pk):
+        self.get_object(pk).delete()
+        return api_response(message="削除成功", code=204)
+
+
+# ================================================================
+# WorkSchedule CRUD
+# ================================================================
+class WorkScheduleListCreateView(APIView):
+    """勤務シフト一覧・新規登録"""
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    model = WorkSchedule
+    serializer_class = WorkScheduleSerializer
+
+    @extend_schema(
+        operation_id="WorkScheduleList",
+        summary="勤務シフト一覧取得",
+        tags=["スタッフ管理"],
+        responses={200: OpenApiResponse(description="一覧取得成功")},
+    )
+    def get(self, request):
+        ser = self.serializer_class(self.model.objects.all(), many=True)
+        return api_response(data=ser.data)
+
+    @extend_schema(
+        operation_id="WorkScheduleCreate",
+        summary="勤務シフト新規登録",
+        tags=["スタッフ管理"],
+        request=WorkScheduleSerializer,
+        responses={
+            201: OpenApiResponse(description="勤務シフトを登録しました。"),
+            400: OpenApiResponse(description="バリデーションエラー"),
+        },
+    )
+    def post(self, request):
+        ser = self.serializer_class(data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return api_response(code=201, message="勤務シフトを登録しました。", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
+
+
+class WorkScheduleDetailView(APIView):
+    """勤務シフト詳細・更新・削除"""
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    model = WorkSchedule
+    serializer_class = WorkScheduleSerializer
+
+    def get_object(self, pk):
+        return get_object_or_404(self.model, pk=pk)
+
+    @extend_schema(
+        operation_id="WorkScheduleRetrieve",
+        summary="勤務シフト詳細取得",
+        tags=["スタッフ管理"],
+        responses={
+            200: OpenApiResponse(description="取得成功"),
+            404: OpenApiResponse(description="存在しない"),
+        },
+    )
+    def get(self, request, pk):
+        ser = self.serializer_class(self.get_object(pk))
+        return api_response(data=ser.data)
+
+    @extend_schema(
+        operation_id="WorkScheduleUpdate",
+        summary="勤務シフト更新",
+        tags=["スタッフ管理"],
+        request=WorkScheduleSerializer,
+        responses={
+            200: OpenApiResponse(description="更新成功"),
+            400: OpenApiResponse(description="バリデーションエラー"),
+        },
+    )
+    def put(self, request, pk):
+        schedule = self.get_object(pk)
+        ser = self.serializer_class(schedule, data=request.data)
+        if ser.is_valid():
+            ser.save()
+            return api_response(message="更新成功", data=ser.data)
+        return api_response(code=400, message="バリデーションエラー", data=ser.errors)
+
+    @extend_schema(
+        operation_id="WorkScheduleDelete",
+        summary="勤務シフト削除",
+        tags=["スタッフ管理"],
+        responses={
+            204: OpenApiResponse(description="削除成功"),
+            404: OpenApiResponse(description="存在しない"),
+        },
+    )
+    def delete(self, request, pk):
+        self.get_object(pk).delete()
+        return api_response(message="削除成功", code=204)
