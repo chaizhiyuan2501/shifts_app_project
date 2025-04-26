@@ -6,8 +6,17 @@ from user.models import User
 
 @pytest.mark.django_db
 class TestUserAPIViews:
+    """
+    User関連APIのテストクラス
+    """
+
     def setup_method(self):
-        User.objects.all().delete()  # テストケースごとにデータの重複や干渉を防ぐため、ユーザーモデルの全データを削除し、クリーンな状態から開始する。
+        """
+        テスト前準備
+        - データベースを初期化
+        - APIClientの初期化
+        """
+        User.objects.all().delete()
         self.client = APIClient()
         self.register_url = reverse("user:user-register")
         self.login_url = reverse("user:user-login")
@@ -18,7 +27,7 @@ class TestUserAPIViews:
     def test_user_register(self):
         """
         ユーザー登録APIのテスト
-        - 正しいnameとpasswordでユーザーが登録されること
+        - 正しいリクエストで201レスポンスを返す
         """
         data = {"name": "newuser", "password": "1234"}
         response = self.client.post(self.register_url, data, format="json")
@@ -28,8 +37,7 @@ class TestUserAPIViews:
     def test_user_login(self):
         """
         ログインAPIのテスト
-        - 登録済みユーザーでログインできること
-        - アクセストークンとリフレッシュトークンが返されること
+        - 正しい認証情報でログインでき、トークンが返る
         """
         data = {"name": "testuser", "password": "1980"}
         response = self.client.post(self.login_url, data, format="json")
@@ -40,8 +48,7 @@ class TestUserAPIViews:
 
     def test_user_list_authenticated(self):
         """
-        ユーザー一覧APIのテスト（認証あり）
-        - アクセストークン付きでアクセスできること
+        ユーザー一覧取得API（認証あり）のテスト
         """
         self.client.force_authenticate(user=self.admin)
         response = self.client.get(self.user_list_url)
@@ -50,8 +57,8 @@ class TestUserAPIViews:
 
     def test_user_list_unauthenticated(self):
         """
-        ユーザー一覧APIのテスト（認証なし）
-        - 認証していない場合は401エラーになること
+        ユーザー一覧取得API（認証なし）のテスト
+        - 401エラーになること
         """
         response = self.client.get(self.user_list_url)
         assert response.status_code == 401
@@ -59,7 +66,7 @@ class TestUserAPIViews:
     def test_user_detail_get(self):
         """
         ユーザー詳細取得APIのテスト
-        - 自身または管理者がユーザー詳細を取得できること
+        - 正常に取得できること
         """
         self.client.force_authenticate(user=self.user)
         url = reverse("user:user-detail", kwargs={"id": self.user.id})
@@ -69,8 +76,8 @@ class TestUserAPIViews:
 
     def test_user_update(self):
         """
-        ユーザー更新APIのテスト
-        - ユーザー名を変更できること
+        ユーザー情報更新APIのテスト
+        - 名前を更新できること
         """
         self.client.force_authenticate(user=self.user)
         url = reverse("user:user-detail", kwargs={"id": self.user.id})
@@ -82,7 +89,7 @@ class TestUserAPIViews:
     def test_user_delete(self):
         """
         ユーザー削除APIのテスト
-        - 管理者がユーザーを削除できること
+        - 管理者が削除できること
         """
         self.client.force_authenticate(user=self.admin)
         url = reverse("user:user-detail", kwargs={"id": self.user.id})

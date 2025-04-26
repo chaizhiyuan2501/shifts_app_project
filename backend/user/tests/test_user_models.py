@@ -8,15 +8,17 @@ import uuid
 class TestUserModel:
     """
     Userモデルのテストクラス。
-    一般ユーザーや管理者ユーザーの作成、__str__の出力、制約チェックなどを行う。
+    - 一般ユーザーと管理者ユーザーの作成テスト
+    - __str__出力確認
+    - 制約違反（例：名前の重複）のテスト
     """
 
     def test_create_general_user(self):
         """
         一般ユーザー作成のテスト
-        - ユーザー名が正しく保存されているか
-        - パスワードチェックが通るか
-        - 管理者フラグ等が False であること
+        - ユーザー名が正しく保存されること
+        - パスワード検証が通ること
+        - is_admin, is_staff が Falseであること
         """
         user = User.objects.create_user(name="newuser", password="1234")
         assert user.name == "newuser"
@@ -27,20 +29,18 @@ class TestUserModel:
     def test_create_superuser(self):
         """
         スーパーユーザー作成のテスト
-        - 管理者権限が正しく付与されているか
-        - パスワードチェック
+        - is_admin, is_superuser, is_staffがTrueであること
         """
         admin = User.objects.create_superuser(name="super", password="5678")
         assert admin.is_admin is True
         assert admin.is_superuser is True
         assert admin.is_staff is True
 
-
     def test_user_str_method(self):
         """
-        __str__ メソッドの出力確認
-        - 一般ユーザーは名前のみ
-        - 管理者は「（管理者）」が付加される
+        __str__メソッドの出力確認
+        - 通常ユーザーは名前のみ
+        - 管理者ユーザーは「（管理者）」が付く
         """
         user = User.objects.create_user(
             name=f"user_{uuid.uuid4().hex[:6]}", password="1234"
@@ -53,7 +53,7 @@ class TestUserModel:
 
     def test_user_requires_name(self):
         """
-        nameが空の場合、ValueErrorが発生することの確認
+        nameが空の場合、ValueErrorが発生することを確認する
         """
         with pytest.raises(ValueError) as e:
             User.objects.create_user(name="", password="1980")
@@ -61,14 +61,14 @@ class TestUserModel:
 
     def test_email_can_be_null(self):
         """
-        emailが未設定（null）でもユーザー作成できるか
+        emailが未設定（null）でもユーザー作成できること
         """
         user = User.objects.create_user(name="noemail", password="1980")
         assert user.email is None
 
     def test_duplicate_username_raises_error(self):
         """
-        ユーザー名が重複した場合、IntegrityErrorが発生することの確認
+        ユーザー名が重複した場合、IntegrityErrorが発生すること
         """
         User.objects.create_user(name="duplicate", password="1980")
         with pytest.raises(IntegrityError):

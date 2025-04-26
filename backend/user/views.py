@@ -26,28 +26,21 @@ from utils.api_response_utils import api_response
 )
 class UserRegisterView(APIView):
     """
-    一般ユーザーの登録用ビュー
-
-    - POSTリクエストで新しいユーザーを登録する
-    - 登録に必要なパラメータ：`name`, `password`
+    新規ユーザー登録用ビュー。
     """
 
     permission_classes = [AllowAny]
 
     def post(self, request, format=None):
-        # 入力値をシリアライザに渡す
         ser = RegisterUserSerializer(data=request.data)
-        # バリデーションチェック
         if ser.is_valid():
             ser.save()
-            # 登録成功時のレスポンス
             return api_response(
                 data=ser.data,
                 code=201,
                 message="ユーザー登録成功",
                 status_code=status.HTTP_201_CREATED,
             )
-        # バリデーション失敗時のレスポンス
         return api_response(
             message="バリデーションエラー",
             code=400,
@@ -67,9 +60,7 @@ class UserRegisterView(APIView):
 )
 class UserListView(APIView):
     """
-    全ユーザーの一覧を取得する（管理者または認証ユーザー専用）
-
-    - GETリクエストでユーザー一覧を取得
+    登録されているユーザーの一覧を取得するビュー。
     """
 
     permission_classes = [IsAuthenticated]
@@ -81,7 +72,7 @@ class UserListView(APIView):
 
 
 @extend_schema(
-    summary="ユーザー詳細情報取得・更新・削除",
+    summary="ユーザー詳細取得・更新・削除",
     tags=["ユーザー管理"],
     responses={
         200: OpenApiResponse(
@@ -92,25 +83,23 @@ class UserListView(APIView):
 )
 class UserDetailView(APIView):
     """
-    特定ユーザーの詳細情報を取得・更新・削除するためのビュー
-
-    - GET: ユーザー詳細情報を取得
-    - PUT: ユーザー情報を更新（部分更新可）
-    - DELETE: ユーザーを削除
+    特定ユーザーの詳細情報取得・更新・削除を担当するビュー。
     """
 
     permission_classes = [IsAuthenticated]
 
     def get_object(self, id):
-        # 存在しない場合は404エラーを返す
+        """IDに基づき対象ユーザーを取得"""
         return get_object_or_404(User, id=id)
 
     def get(self, request, id):
+        """ユーザー詳細情報取得"""
         user = self.get_object(id)
         ser = UserSerializer(user)
         return api_response(data=ser.data, message="ユーザー詳細取得成功")
 
     def put(self, request, id):
+        """ユーザー情報更新"""
         user = self.get_object(id)
         ser = UserSerializer(user, data=request.data, partial=True)
         if ser.is_valid():
@@ -124,6 +113,7 @@ class UserDetailView(APIView):
         )
 
     def delete(self, request, id):
+        """ユーザー削除"""
         user = self.get_object(id)
         user.delete()
         return api_response(
@@ -133,7 +123,7 @@ class UserDetailView(APIView):
 
 @extend_schema(
     summary="JWTログイン",
-    description="ユーザー名とパスワードを用いてログインし、アクセストークンとリフレッシュトークンを取得する。",
+    description="ユーザー名とパスワードを用いてアクセストークンとリフレッシュトークンを取得します。",
     tags=["認証"],
     responses={
         200: OpenApiResponse(description="ログイン成功"),
@@ -142,9 +132,7 @@ class UserDetailView(APIView):
 )
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
-    JWTを使用したログイン用ビュー
-
-    - POST: `name`, `password`を送信してアクセストークン/リフレッシュトークンを取得
+    JWTによる認証（ログイン）用ビュー。
     """
 
     serializer_class = CustomTokenObtainPairSerializer
@@ -166,8 +154,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 @extend_schema(
-    summary="アクセストークンの更新",
-    description="リフレッシュトークンを使用して新しいアクセストークンを取得します。",
+    summary="アクセストークン更新",
+    description="リフレッシュトークンを用いて新しいアクセストークンを取得するAPI。",
     tags=["認証"],
     responses={
         200: OpenApiResponse(response={"access": "新しいアクセストークン"}),
@@ -176,7 +164,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 )
 class CustomTokenRefreshView(APIView):
     """
-    リフレッシュトークンを使ってアクセストークンを更新するビュー
+    アクセストークンをリフレッシュするビュー。
     """
 
     permission_classes = [AllowAny]

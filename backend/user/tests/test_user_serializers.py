@@ -1,21 +1,23 @@
-﻿# user/tests/test_user_serializers.py
-
-import pytest
+﻿import pytest
 from user.models import User
-from user.serializers import RegisterUserSerializer, UserSerializer, CustomTokenObtainPairSerializer
+from user.serializers import (
+    RegisterUserSerializer,
+    UserSerializer,
+    CustomTokenObtainPairSerializer,
+)
 from rest_framework.exceptions import ValidationError
-from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
 
 @pytest.mark.django_db
 class TestRegisterUserSerializer:
     """
-    RegisterUserSerializer のテストケース
+    RegisterUserSerializer のテストクラス。
+    - ユーザー登録のバリデーションチェック
     """
 
     def test_valid_data(self):
         """
-        正常なデータでユーザー登録が成功すること
+        正しいデータでユーザー登録が成功すること
         """
         data = {"name": "新ユーザー", "password": "1234"}
         serializer = RegisterUserSerializer(data=data)
@@ -26,7 +28,7 @@ class TestRegisterUserSerializer:
 
     def test_name_is_required(self):
         """
-        name が空の場合にバリデーションエラーになること
+        nameが空の場合にバリデーションエラーが発生すること
         """
         data = {"name": "", "password": "1234"}
         serializer = RegisterUserSerializer(data=data)
@@ -35,7 +37,7 @@ class TestRegisterUserSerializer:
 
     def test_name_must_be_at_least_2_characters(self):
         """
-        name が2文字未満の場合にバリデーションエラーになること
+        nameが2文字未満の場合にバリデーションエラーが発生すること
         """
         data = {"name": "あ", "password": "1234"}
         serializer = RegisterUserSerializer(data=data)
@@ -44,7 +46,7 @@ class TestRegisterUserSerializer:
 
     def test_name_must_be_unique(self):
         """
-        重複した name が登録されるとエラーになること
+        nameが重複している場合にバリデーションエラーが発生すること
         """
         User.objects.create_user(name="testuser", password="pass")
         data = {"name": "testuser", "password": "newpass"}
@@ -54,7 +56,7 @@ class TestRegisterUserSerializer:
 
     def test_password_required(self):
         """
-        password が空の場合にエラーになること
+        passwordが空の場合にバリデーションエラーが発生すること
         """
         data = {"name": "user2", "password": ""}
         serializer = RegisterUserSerializer(data=data)
@@ -65,7 +67,8 @@ class TestRegisterUserSerializer:
 @pytest.mark.django_db
 class TestUserSerializer:
     """
-    UserSerializer のテストケース（出力専用）
+    UserSerializer のテストクラス。
+    - 出力専用のテスト
     """
 
     def test_user_serialization(self):
@@ -81,29 +84,27 @@ class TestUserSerializer:
 @pytest.mark.django_db
 class TestCustomTokenObtainPairSerializer:
     """
-    CustomTokenObtainPairSerializer のテストケース
+    CustomTokenObtainPairSerializer のテストクラス。
     """
 
     def test_valid_login(self):
         """
-        正常なログインでトークンが取得できること
+        正しい認証情報でトークンが取得できること
         """
         User.objects.create_user(name="loginuser", password="1980")
         data = {"name": "loginuser", "password": "1980"}
         serializer = CustomTokenObtainPairSerializer(data=data)
         assert serializer.is_valid()
-
         tokens = serializer.validated_data
         assert "access" in tokens
         assert "refresh" in tokens
 
     def test_invalid_login(self):
         """
-        パスワードが間違っている場合にエラーになること
+        間違ったパスワードの場合に認証エラーが発生すること
         """
         User.objects.create_user(name="loginuser", password="1980")
         data = {"name": "loginuser", "password": "wrong"}
         serializer = CustomTokenObtainPairSerializer(data=data)
-
         with pytest.raises(ValidationError):
             serializer.is_valid(raise_exception=True)
