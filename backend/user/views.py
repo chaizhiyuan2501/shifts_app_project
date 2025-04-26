@@ -24,6 +24,7 @@ class UserRegisterView(APIView):
         summary="ユーザー登録",
         description="新しいユーザーを登録します。",
         tags=["ユーザー管理"],
+        request=RegisterUserSerializer,
         responses={
             201: OpenApiResponse(
                 response=UserSerializer, description="ユーザー登録成功"
@@ -97,6 +98,13 @@ class UserDetailView(APIView):
         summary="ユーザー更新",
         description="特定ユーザー情報を更新します。",
         tags=["ユーザー管理"],
+        request=UserSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=UserSerializer, description="ユーザー更新成功"
+            ),
+            400: OpenApiResponse(description="バリデーションエラー"),
+        },
     )
     def put(self, request, id):
         user = self.get_object(id)
@@ -116,6 +124,10 @@ class UserDetailView(APIView):
         summary="ユーザー削除",
         description="特定ユーザーを削除します。",
         tags=["ユーザー管理"],
+        responses={
+            204: OpenApiResponse(description="ユーザー削除成功"),
+            404: OpenApiResponse(description="該当ユーザーが存在しない"),
+        },
     )
     def delete(self, request, id):
         user = self.get_object(id)

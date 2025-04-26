@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_spectacular",
     "django_extensions",
+    "corsheaders",
     # 自作アプリ
     "user",
     "staff",
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -91,15 +93,10 @@ WSGI_APPLICATION = "shifts_project.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "mydatabase",
-        "USER": "myuser",
-        "PASSWORD": "mypassword",
-        "HOST": "db",
-        "PORT": "5432",
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
-
 # =========================================
 # パスワードバリデーション設定
 # =========================================
@@ -167,6 +164,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "スタッフ出勤、利用者訪問、食事注文を一元管理するAPI",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "COMPONENT_SPLIT_REQUEST": True,  # POST/PUTにリクエスト・レスポンスを分離表示
     "SWAGGER_UI_SETTINGS": {
         "docExpansion": "none",  # Swagger UIで初期展開しない
@@ -191,7 +189,7 @@ SPECTACULAR_SETTINGS = {
 # =========================================
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # アクセストークンの有効期限
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # アクセストークンの有効期限
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # リフレッシュトークンの有効期限
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -223,3 +221,12 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework.simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # 允许你前端开发地址
+#     "http://127.0.0.1:8000",  # 如果Swagger也是从这里加载的
+# ]
