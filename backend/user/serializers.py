@@ -24,7 +24,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["name", "email", "password", "is_admin"]
+        fields = ["name", "email", "password", "is_staff"]
 
     def validate_name(self, value):
         """名前の重複をチェック"""
@@ -60,7 +60,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "name", "email", "is_admin", "is_active"]
+        fields = ["id", "name", "email", "is_staff", "is_active"]
 
     def validate_name(self, value):
         """名前変更時の重複チェック"""
@@ -97,6 +97,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "id": self.user.id,
             "name": self.user.name,
             "email": self.user.email,
-            "is_admin": self.user.is_admin,
+            "is_staff": self.user.is_staff,
         }
         return data

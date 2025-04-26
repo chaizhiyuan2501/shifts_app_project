@@ -97,7 +97,7 @@ def create_default_data(sender, **kwargs):
 
     for shift in default_shifts:
         # codeが既に存在しない場合のみ登録する
-        obj, created = ShiftType.objects.get_or_create(
+        obj, created = ShiftType.objects.update_or_create(
             code=shift["code"],
             defaults={
                 "name": shift["name"],

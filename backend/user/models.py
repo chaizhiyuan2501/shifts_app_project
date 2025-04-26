@@ -33,7 +33,7 @@ class UserManager(BaseUserManager):
         管理者ユーザー（スーパーユーザー）を作成するメソッド。
         - is_admin, is_staff, is_superuser をTrueに設定
         """
-        extra_fields.setdefault("is_admin", True)
+
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
@@ -76,4 +76,4 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         """管理画面などで表示される文字列"""
-        return f"{self.name}（管理者）" if self.is_admin else self.name
+        return f"{self.name}（管理者）" if self.is_staff else self.name

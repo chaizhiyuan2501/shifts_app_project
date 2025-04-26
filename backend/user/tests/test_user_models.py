@@ -18,21 +18,21 @@ class TestUserModel:
         一般ユーザー作成のテスト
         - ユーザー名が正しく保存されること
         - パスワード検証が通ること
-        - is_admin, is_staff が Falseであること
+        - is_staff , is_staff が Falseであること
         """
         user = User.objects.create_user(name="newuser", password="1234")
         assert user.name == "newuser"
         assert user.check_password("1234")
-        assert user.is_admin is False
+        assert user.is_staff is False
         assert user.is_staff is False
 
     def test_create_superuser(self):
         """
         スーパーユーザー作成のテスト
-        - is_admin, is_superuser, is_staffがTrueであること
+        - is_staff , is_superuser, is_staffがTrueであること
         """
         admin = User.objects.create_superuser(name="super", password="5678")
-        assert admin.is_admin is True
+        assert admin.is_staff is True
         assert admin.is_superuser is True
         assert admin.is_staff is True
 
