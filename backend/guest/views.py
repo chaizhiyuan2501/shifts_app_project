@@ -16,238 +16,290 @@ from .serializers import (
     ScheduleUploadSerializer,
 )
 
-# 各APIビューの役割や処理内容は関数ごとに詳細な説明あり
-# ここでは主要なビュークラスに日本語コメントを挿入し、理解を補助
+# ------------------------- 利用者管理 -------------------------
 
-# 利用者（Guest）一覧・新規登録用ビュー
+
 class GuestListCreateView(APIView):
     """
-    利用者の一覧取得と新規登録を行うAPIビュー
+    利用者の一覧取得・新規登録を行うAPIビュー
     """
+
     permission_classes = [IsAdminUser]
 
-    @extend_schema(summary="利用者一覧の取得", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="GuestList",
+        summary="利用者一覧の取得",
+        description="すべての利用者情報を一覧で取得します。",
+        tags=["利用者管理"],
+    )
     def get(self, request):
-        """
-        全利用者を取得する（管理者のみ）
-        """
         guests = Guest.objects.all()
         serializer = GuestSerializer(guests, many=True)
         return api_response(data=serializer.data)
 
-    @extend_schema(summary="利用者の新規登録", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="GuestCreate",
+        summary="利用者の新規登録",
+        description="新しい利用者を登録します。",
+        tags=["利用者管理"],
+    )
     def post(self, request):
-        """
-        新しい利用者を登録する（管理者のみ）
-        """
         serializer = GuestSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return api_response(data=serializer.data, message="登録成功", code=status.HTTP_201_CREATED)
-        return api_response(code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors)
+            return api_response(
+                data=serializer.data, message="登録成功", code=status.HTTP_201_CREATED
+            )
+        return api_response(
+            code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors
+        )
 
 
-# 利用者詳細取得・編集・削除ビュー
 class GuestDetailView(APIView):
     """
     利用者の詳細取得・更新・削除を行うAPIビュー
     """
+
     permission_classes = [IsAdminUser]
 
     def get_object(self, pk):
         return Guest.objects.get(pk=pk)
 
-    @extend_schema(summary="利用者の詳細取得", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="GuestRetrieve",
+        summary="利用者の詳細取得",
+        description="特定の利用者情報を取得します。",
+        tags=["利用者管理"],
+    )
     def get(self, request, pk):
-        """
-        指定された利用者の詳細を取得する
-        """
         guest = self.get_object(pk)
         serializer = GuestSerializer(guest)
         return api_response(data=serializer.data)
 
-    @extend_schema(summary="利用者情報の更新", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="GuestUpdate",
+        summary="利用者情報の更新",
+        description="特定の利用者情報を更新します。",
+        tags=["利用者管理"],
+    )
     def put(self, request, pk):
-        """
-        指定された利用者の情報を更新する
-        """
         guest = self.get_object(pk)
         serializer = GuestSerializer(guest, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return api_response(data=serializer.data, message="更新成功")
-        return api_response(code=status.HTTP_400_BAD_REQUEST, message="更新失敗", data=serializer.errors)
+        return api_response(
+            code=status.HTTP_400_BAD_REQUEST, message="更新失敗", data=serializer.errors
+        )
 
-    @extend_schema(summary="利用者の削除", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="GuestDelete",
+        summary="利用者の削除",
+        description="特定の利用者情報を削除します。",
+        tags=["利用者管理"],
+    )
     def delete(self, request, pk):
-        """
-        指定された利用者を削除する
-        """
         guest = self.get_object(pk)
         guest.delete()
         return api_response(message="削除成功", code=status.HTTP_204_NO_CONTENT)
 
 
-# 来訪種別（VisitType）一覧・新規登録ビュー
+# ------------------------- 来訪種別管理 -------------------------
+
+
 class VisitTypeListCreateView(APIView):
     """
-    来訪種別（泊まり、通い、休みなど）の一覧取得・新規登録用APIビュー
+    来訪種別（泊まり、通い、休みなど）の一覧取得・新規登録APIビュー
     """
+
     permission_classes = [IsAdminUser]
 
-    @extend_schema(summary="来訪種別一覧の取得", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitTypeList",
+        summary="来訪種別一覧の取得",
+        description="登録済みの来訪種別（泊まり、通い、休み等）の一覧を取得します。",
+        tags=["利用者管理"],
+    )
     def get(self, request):
-        """
-        来訪種別の一覧を取得する
-        """
         types = VisitType.objects.all()
         serializer = VisitTypeSerializer(types, many=True)
         return api_response(data=serializer.data)
 
-    @extend_schema(summary="来訪種別の新規登録", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitTypeCreate",
+        summary="来訪種別の新規登録",
+        description="新しい来訪種別を登録します。",
+        tags=["利用者管理"],
+    )
     def post(self, request):
-        """
-        来訪種別を新規登録する
-        """
         serializer = VisitTypeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return api_response(data=serializer.data, message="登録成功", code=status.HTTP_201_CREATED)
-        return api_response(code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors)
+            return api_response(
+                data=serializer.data, message="登録成功", code=status.HTTP_201_CREATED
+            )
+        return api_response(
+            code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors
+        )
 
 
-# 来訪種別の詳細操作ビュー
 class VisitTypeDetailView(APIView):
     """
-    来訪種別の詳細取得・更新・削除を行うAPIビュー
+    来訪種別の詳細取得・更新・削除APIビュー
     """
+
     permission_classes = [IsAdminUser]
 
     def get_object(self, pk):
         return VisitType.objects.get(pk=pk)
 
-    @extend_schema(summary="来訪種別の詳細取得", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitTypeRetrieve",
+        summary="来訪種別の詳細取得",
+        description="特定の来訪種別情報を取得します。",
+        tags=["利用者管理"],
+    )
     def get(self, request, pk):
-        """
-        指定された来訪種別の情報を取得する
-        """
         obj = self.get_object(pk)
         serializer = VisitTypeSerializer(obj)
         return api_response(data=serializer.data)
 
-    @extend_schema(summary="来訪種別の更新", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitTypeUpdate",
+        summary="来訪種別の更新",
+        description="特定の来訪種別情報を更新します。",
+        tags=["利用者管理"],
+    )
     def put(self, request, pk):
-        """
-        指定された来訪種別を更新する
-        """
         obj = self.get_object(pk)
         serializer = VisitTypeSerializer(obj, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return api_response(data=serializer.data, message="更新成功")
-        return api_response(code=status.HTTP_400_BAD_REQUEST, message="更新失敗", data=serializer.errors)
+        return api_response(
+            code=status.HTTP_400_BAD_REQUEST, message="更新失敗", data=serializer.errors
+        )
 
-    @extend_schema(summary="来訪種別の削除", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitTypeDelete",
+        summary="来訪種別の削除",
+        description="特定の来訪種別情報を削除します。",
+        tags=["利用者管理"],
+    )
     def delete(self, request, pk):
-        """
-        指定された来訪種別を削除する
-        """
         obj = self.get_object(pk)
         obj.delete()
         return api_response(message="削除成功", code=status.HTTP_204_NO_CONTENT)
 
 
-# スケジュール（VisitSchedule）の一覧・新規登録ビュー
+# ------------------------- スケジュール管理 -------------------------
+
+
 class VisitScheduleListCreateView(APIView):
     """
-    利用者の来訪スケジュール一覧取得・登録用APIビュー
+    来訪スケジュール一覧取得・新規登録APIビュー
     """
+
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @extend_schema(summary="スケジュール一覧の取得", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitScheduleList",
+        summary="スケジュール一覧の取得",
+        description="すべての来訪スケジュールを一覧で取得します。",
+        tags=["利用者管理"],
+    )
     def get(self, request):
-        """
-        全スケジュールの一覧を取得する
-        """
         qs = VisitSchedule.objects.all()
         serializer = VisitScheduleSerializer(qs, many=True)
         return api_response(data=serializer.data)
 
-    @extend_schema(summary="スケジュールの新規登録", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitScheduleCreate",
+        summary="スケジュールの新規登録",
+        description="新しい来訪スケジュールを登録します。",
+        tags=["利用者管理"],
+    )
     def post(self, request):
-        """
-        新しいスケジュールを登録する
-        """
         serializer = VisitScheduleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return api_response(data=serializer.data, message="登録成功", code=status.HTTP_201_CREATED)
-        return api_response(code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors)
+            return api_response(
+                data=serializer.data, message="登録成功", code=status.HTTP_201_CREATED
+            )
+        return api_response(
+            code=status.HTTP_400_BAD_REQUEST, message="登録失敗", data=serializer.errors
+        )
 
 
-# スケジュール詳細取得・更新・削除ビュー
 class VisitScheduleDetailView(APIView):
     """
-    スケジュールの詳細取得・更新・削除を行うAPIビュー
+    来訪スケジュール詳細取得・更新・削除APIビュー
     """
+
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
         return VisitSchedule.objects.get(pk=pk)
 
-    @extend_schema(summary="スケジュールの詳細取得", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitScheduleRetrieve",
+        summary="スケジュールの詳細取得",
+        description="特定の来訪スケジュール情報を取得します。",
+        tags=["利用者管理"],
+    )
     def get(self, request, pk):
-        """
-        指定されたスケジュールを取得する
-        """
         obj = self.get_object(pk)
         serializer = VisitScheduleSerializer(obj)
         return api_response(data=serializer.data)
 
-    @extend_schema(summary="スケジュールの更新", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitScheduleUpdate",
+        summary="スケジュールの更新",
+        description="特定の来訪スケジュール情報を更新します。",
+        tags=["利用者管理"],
+    )
     def put(self, request, pk):
-        """
-        指定されたスケジュールを更新する
-        """
         obj = self.get_object(pk)
         serializer = VisitScheduleSerializer(obj, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return api_response(data=serializer.data, message="更新成功")
-        return api_response(code=status.HTTP_400_BAD_REQUEST, message="更新失敗", data=serializer.errors)
+        return api_response(
+            code=status.HTTP_400_BAD_REQUEST, message="更新失敗", data=serializer.errors
+        )
 
-    @extend_schema(summary="スケジュールの削除", tags=["利用者管理"])
+    @extend_schema(
+        operation_id="VisitScheduleDelete",
+        summary="スケジュールの削除",
+        description="特定の来訪スケジュール情報を削除します。",
+        tags=["利用者管理"],
+    )
     def delete(self, request, pk):
-        """
-        指定されたスケジュールを削除する
-        """
         obj = self.get_object(pk)
         obj.delete()
         return api_response(message="削除成功", code=status.HTTP_204_NO_CONTENT)
 
 
-# スケジュール画像OCR登録API
-@extend_schema(
-    summary="画像からスケジュールを登録する",
-    description="画像からAI-OCRによりスケジュール情報を抽出し、自動でDBに保存します。",
-    tags=["利用者管理"],
-)
 class ScheduleUploadView(APIView):
     """
-    OCRで解析した画像からスケジュールを自動登録するAPI
+    OCR画像からスケジュール登録APIビュー
     """
+
     permission_classes = [IsAdminUser]
 
+    @extend_schema(
+        operation_id="ScheduleUpload",
+        summary="画像からスケジュール登録",
+        description="画像ファイルをOCR解析し、来訪スケジュールを自動登録します。",
+        tags=["利用者管理"],
+    )
     def post(self, request, *args, **kwargs):
-        """
-        アップロード画像をOCR処理し、スケジュールを自動登録する
-        """
         serializer = ScheduleUploadSerializer(data=request.data)
         if not serializer.is_valid():
             return api_response(
                 code=status.HTTP_400_BAD_REQUEST,
                 message="画像ファイルが無効です。",
-                data=serializer.errors
+                data=serializer.errors,
             )
 
         image_file = serializer.validated_data["image"]
@@ -265,5 +317,5 @@ class ScheduleUploadView(APIView):
                 "guest": result["guest"],
                 "year": result["year"],
                 "month": result["month"],
-            }
+            },
         )

@@ -15,27 +15,35 @@ from .serializers import (
 from utils.api_response_utils import api_response
 from meal.utils.order_utils import generate_meal_orders_for_day
 
-
 # ========================================
 # 食事の種類（MealType）API
 # ========================================
 
 
-@extend_schema(summary="食事種類一覧と作成", tags=["食事管理"])
 class MealTypeListCreateView(APIView):
     """
-    食事の種類（朝・昼・夕）の一覧取得・登録API
-    - GET：すべての食事種別を取得（管理者）
-    - POST：新しい食事種別を登録（管理者）
+    食事の種類一覧取得・新規登録APIビュー
     """
 
     permission_classes = [IsAdminUser]
 
+    @extend_schema(
+        operation_id="MealTypeList",
+        summary="食事種類一覧の取得",
+        description="登録済みの食事種類（朝食、昼食、夕食など）を一覧で取得します。",
+        tags=["食事管理"],
+    )
     def get(self, request):
         queryset = MealType.objects.all()
         serializer = MealTypeSerializer(queryset, many=True)
         return api_response(data=serializer.data)
 
+    @extend_schema(
+        operation_id="MealTypeCreate",
+        summary="食事種類の新規登録",
+        description="新しい食事種類を登録します。",
+        tags=["食事管理"],
+    )
     def post(self, request):
         serializer = MealTypeSerializer(data=request.data)
         if serializer.is_valid():
@@ -46,14 +54,9 @@ class MealTypeListCreateView(APIView):
         )
 
 
-@extend_schema(summary="食事種類詳細", tags=["食事管理"])
 class MealTypeDetailView(APIView):
     """
-    食事の種類の詳細取得・更新・削除API
-    - GET：指定IDの詳細取得
-    - PUT：更新
-    - DELETE：削除
-    - 管理者のみアクセス可
+    食事の種類詳細取得・更新・削除APIビュー
     """
 
     permission_classes = [IsAdminUser]
@@ -64,6 +67,12 @@ class MealTypeDetailView(APIView):
         except MealType.DoesNotExist:
             return None
 
+    @extend_schema(
+        operation_id="MealTypeRetrieve",
+        summary="食事種類の詳細取得",
+        description="特定の食事種類情報を取得します。",
+        tags=["食事管理"],
+    )
     def get(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
@@ -71,6 +80,12 @@ class MealTypeDetailView(APIView):
         serializer = MealTypeSerializer(obj)
         return api_response(data=serializer.data)
 
+    @extend_schema(
+        operation_id="MealTypeUpdate",
+        summary="食事種類の更新",
+        description="特定の食事種類情報を更新します。",
+        tags=["食事管理"],
+    )
     def put(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
@@ -83,6 +98,12 @@ class MealTypeDetailView(APIView):
             code=400, message="バリデーションエラー", data=serializer.errors
         )
 
+    @extend_schema(
+        operation_id="MealTypeDelete",
+        summary="食事種類の削除",
+        description="特定の食事種類情報を削除します。",
+        tags=["食事管理"],
+    )
     def delete(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
@@ -96,13 +117,9 @@ class MealTypeDetailView(APIView):
 # ========================================
 
 
-@extend_schema(summary="食事注文一覧・登録", tags=["食事管理"])
 class MealOrderListCreateView(APIView):
     """
-    食事注文の一覧取得・登録API
-    - 利用者 or スタッフのログイン状態によりシリアライザを切替
-    - GET：全件取得
-    - POST：注文登録
+    食事注文一覧取得・新規登録APIビュー
     """
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -112,12 +129,24 @@ class MealOrderListCreateView(APIView):
             return StaffMealOrderSerializer
         return GuestMealOrderSerializer
 
+    @extend_schema(
+        operation_id="MealOrderList",
+        summary="食事注文一覧の取得",
+        description="すべての食事注文を一覧で取得します。",
+        tags=["食事管理"],
+    )
     def get(self, request):
         orders = MealOrder.objects.all()
         serializer_class = self.get_serializer_class(request)
         serializer = serializer_class(orders, many=True)
         return api_response(data=serializer.data)
 
+    @extend_schema(
+        operation_id="MealOrderCreate",
+        summary="食事注文の新規登録",
+        description="新しい食事注文を登録します。",
+        tags=["食事管理"],
+    )
     def post(self, request):
         serializer_class = self.get_serializer_class(request)
         serializer = serializer_class(data=request.data)
@@ -129,12 +158,9 @@ class MealOrderListCreateView(APIView):
         )
 
 
-@extend_schema(summary="食事注文詳細操作", tags=["食事管理"])
 class MealOrderDetailView(APIView):
     """
-    食事注文の詳細取得・更新・削除API
-    - ID指定で操作
-    - 利用者・スタッフいずれかの認証が必要
+    食事注文詳細取得・更新・削除APIビュー
     """
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -150,6 +176,12 @@ class MealOrderDetailView(APIView):
             return StaffMealOrderSerializer
         return GuestMealOrderSerializer
 
+    @extend_schema(
+        operation_id="MealOrderRetrieve",
+        summary="食事注文の詳細取得",
+        description="特定の食事注文情報を取得します。",
+        tags=["食事管理"],
+    )
     def get(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
@@ -158,6 +190,12 @@ class MealOrderDetailView(APIView):
         serializer = serializer_class(obj)
         return api_response(data=serializer.data)
 
+    @extend_schema(
+        operation_id="MealOrderUpdate",
+        summary="食事注文の更新",
+        description="特定の食事注文情報を更新します。",
+        tags=["食事管理"],
+    )
     def put(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
@@ -171,6 +209,12 @@ class MealOrderDetailView(APIView):
             code=400, message="バリデーションエラー", data=serializer.errors
         )
 
+    @extend_schema(
+        operation_id="MealOrderDelete",
+        summary="食事注文の削除",
+        description="特定の食事注文情報を削除します。",
+        tags=["食事管理"],
+    )
     def delete(self, request, pk):
         obj = self.get_object(pk)
         if not obj:
@@ -179,13 +223,17 @@ class MealOrderDetailView(APIView):
         return api_response(code=204, message="削除成功")
 
 
-@extend_schema(summary="食事注文件数の集計", tags=["食事管理"])
 class MealOrderCountView(APIView):
     """
-    指定日付における注文件数の集計API
-    - ゲスト、スタッフ、全体の食事ごとの件数を返す
+    食事注文件数集計APIビュー
     """
 
+    @extend_schema(
+        operation_id="MealOrderCount",
+        summary="食事注文件数の集計",
+        description="指定日付における食事注文の件数をゲスト別・スタッフ別・合計で集計して返します。",
+        tags=["食事管理"],
+    )
     def post(self, request: Request):
         date = request.data.get("date")
         if not date:
@@ -222,20 +270,19 @@ class MealOrderCountView(APIView):
         )
 
 
-@extend_schema(
-    summary="食事注文の自動生成",
-    description="指定日付のシフトおよび訪問予定に基づき、スタッフおよび「泊」の利用者に対して朝・昼・夕の食事注文を一括生成する。",
-    tags=["食事管理"],
-)
 class MealOrderAutoGenerateView(APIView):
     """
-    食事注文の一括自動生成API（管理者用）
-    - 指定された日付に対して、スタッフのシフトと「泊」の利用者に基づき注文を作成
-    - 利用者の訪問種別が「泊」のみ対象
+    食事注文一括自動生成APIビュー
     """
 
     permission_classes = [IsAdminUser]
 
+    @extend_schema(
+        operation_id="MealOrderAutoGenerate",
+        summary="食事注文の自動生成",
+        description="指定日付のシフトおよび訪問予定に基づき、スタッフと泊の利用者に対して食事注文を自動生成します。",
+        tags=["食事管理"],
+    )
     def post(self, request):
         from datetime import datetime
 
