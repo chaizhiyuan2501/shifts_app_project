@@ -6,7 +6,7 @@ from utils.date_utils import get_weekday_jp, get_shift_period_range
 
 
 class Role(models.Model):
-    """職種（正社員、アルバイト、夜勤専門 など）"""
+    """職種モデル（正社員、アルバイト、夜勤専門など）を管理する"""
 
     name = models.CharField(max_length=255, unique=True, verbose_name="職種名")
 
@@ -19,7 +19,7 @@ class Role(models.Model):
 
 
 class Staff(models.Model):
-    """スタッフ情報"""
+    """スタッフ基本情報モデル"""
 
     user = models.OneToOneField(
         User,
@@ -42,20 +42,15 @@ class Staff(models.Model):
 
     def monthly_work_hours(self, target_date=None):
         """
-        現在の集計期間（15日〜翌月15日）の出勤時間合計を返す（休憩時間を除く）。
+        指定された月の出勤実働時間（休憩時間を除く）を集計して返す。
 
-        使用例:
-            staff = Staff.objects.get(name="田中太郎")
-            print(staff.monthly_work_hours())  # 例: 2 days, 6:00:00
+        Args:
+            target_date (datetime.date, optional): 任意の日付。指定がなければ今日。
 
-        パラメータ:
-            target_date: 任意指定された日付（例：2025-04-01）→ 属する15日-翌15日の範囲で集計
-
-        戻り値:
-            datetime.timedelta 型の合計時間（休憩時間を引いた実働時間）
+        Returns:
+            datetime.timedelta: 合計実働時間
         """
         from .models import WorkSchedule
-        from datetime import datetime, timedelta
 
         start_date, end_date = get_shift_period_range(target_date)
         schedules = WorkSchedule.objects.filter(
@@ -68,7 +63,7 @@ class Staff(models.Model):
             start_dt = datetime.combine(schedule.date, shift.start_time)
             end_dt = datetime.combine(schedule.date, shift.end_time)
 
-            # 翌日にまたがる場合（夜勤など）
+            # 夜勤など翌日跨りの場合対応
             if end_dt <= start_dt:
                 end_dt += timedelta(days=1)
 
@@ -81,7 +76,7 @@ class Staff(models.Model):
 
 
 class ShiftType(models.Model):
-    """シフトの種類（早番、遅番、夜勤、明けなど）"""
+    """シフト種類モデル（早番、遅番、夜勤など）"""
 
     code = models.CharField(max_length=10, unique=True, verbose_name="コード")
     name = models.CharField(max_length=50, verbose_name="シフト名")
@@ -105,13 +100,15 @@ class ShiftType(models.Model):
 
     def get_work_duration(self):
         """
-        実際の勤務時間（休憩時間を引いた時間）を timedelta で返す。
+        勤務時間（休憩時間差引後）をtimedeltaで取得する。
+
+        Returns:
+            datetime.timedelta: 実働時間
         """
         today = datetime.today().date()
         start_dt = datetime.combine(today, self.start_time)
         end_dt = datetime.combine(today, self.end_time)
 
-        # end が start より早ければ、翌日の勤務とみなす
         if end_dt <= start_dt:
             end_dt += timedelta(days=1)
 
@@ -120,7 +117,7 @@ class ShiftType(models.Model):
 
 
 class WorkSchedule(models.Model):
-    """勤務シフト（1人1日1件）"""
+    """勤務シフト管理モデル（スタッフ毎・日毎のシフト情報）"""
 
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE, verbose_name="スタッフ")
     shift = models.ForeignKey(
@@ -141,6 +138,9 @@ class WorkSchedule(models.Model):
     @property
     def weekday_jp(self):
         """
-        指定した日付の曜日を日本語で返す
+        勤務日の曜日を日本語で取得する。
+
+        Returns:
+            str: 日本語の曜日名（例：月、火、水）
         """
         return get_weekday_jp(self.date)

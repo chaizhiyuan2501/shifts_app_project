@@ -11,7 +11,12 @@ from datetime import time, date, timedelta
 
 @pytest.mark.django_db
 class TestRoleSerializer:
+    """
+    RoleSerializerのテストクラス。
+    """
+
     def test_valid_data(self):
+        """職種登録シリアライザーのバリデーションテスト"""
         serializer = RoleSerializer(data={"name": "介護士"})
         assert serializer.is_valid()
         assert serializer.validated_data["name"] == "介護士"
@@ -19,7 +24,12 @@ class TestRoleSerializer:
 
 @pytest.mark.django_db
 class TestStaffSerializer:
+    """
+    StaffSerializerのテストクラス。
+    """
+
     def test_name_required(self):
+        """スタッフ名の空欄バリデーションテスト"""
         serializer = StaffSerializer(data={"name": "", "role_id": None})
         assert not serializer.is_valid()
         assert "name" in serializer.errors
@@ -27,9 +37,14 @@ class TestStaffSerializer:
 
 @pytest.mark.django_db
 class TestShiftTypeSerializer:
+    """
+    ShiftTypeSerializerのテストクラス。
+    """
+
     def test_invalid_code(self):
+        """シフトコードの形式バリデーション（英数字以外エラー）"""
         data = {
-            "code": "夜勤@",  # 特殊字符应报错
+            "code": "夜勤@",  # 特殊記号含む
             "name": "夜勤",
             "start_time": "20:00",
             "end_time": "08:00",
@@ -41,6 +56,7 @@ class TestShiftTypeSerializer:
         assert "code" in serializer.errors
 
     def test_negative_break_minutes(self):
+        """休憩時間のマイナス値バリデーション（エラー期待）"""
         data = {
             "code": "YAKIN",
             "name": "夜勤",
@@ -56,17 +72,20 @@ class TestShiftTypeSerializer:
 
 @pytest.mark.django_db
 class TestWorkScheduleSerializer:
+    """
+    WorkScheduleSerializerのテストクラス。
+    """
+
     def test_past_date_validation(self, django_user_model):
+        """勤務日が過去の場合のバリデーションエラーテスト"""
         role, _ = Role.objects.get_or_create(name="看護師")
         user = django_user_model.objects.create(name="test_user")
         staff = Staff.objects.create(name="テスト太郎", role=role, user=user)
 
-        from datetime import timedelta, date
-
         yesterday = date.today() - timedelta(days=1)
         data = {
             "staff_id": staff.id,
-            "shift_id": 1,  # テスト用に既存のシフトIDを使う or 事前に作成する
+            "shift_id": 1,  # 仮のシフトID
             "date": str(yesterday),
         }
         serializer = WorkScheduleSerializer(data=data)

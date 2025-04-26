@@ -8,18 +8,23 @@ client = APIClient()
 
 @pytest.mark.django_db
 class TestRoleView:
+    """
+    Role APIエンドポイントのテストクラス。
+    """
 
     def setup_method(self):
+        """テスト開始前に職種データをクリア"""
         Role.objects.all().delete()
 
     def test_create_role(self, admin_user):
+        """職種登録APIの成功テスト"""
         client.force_authenticate(user=admin_user)
         response = client.post("/api/staff/roles/", {"name": "介護福祉士"})
         assert response.status_code == 201
         assert response.data["message"] == "職種を登録しました。"
 
     def test_get_role_list(self, admin_user):
-        # 既に存在する職種を重複登録しないよう get_or_create を使用
+        """職種一覧取得APIの成功テスト"""
         Role.objects.get_or_create(name="看護師")
         client.force_authenticate(user=admin_user)
         response = client.get("/api/staff/roles/")
@@ -29,11 +34,16 @@ class TestRoleView:
 
 @pytest.mark.django_db
 class TestStaffView:
+    """
+    Staff APIエンドポイントのテストクラス。
+    """
+
     def setup_method(self):
+        """テスト開始前に職種データをクリア"""
         Role.objects.all().delete()
 
     def test_create_staff(self, admin_user):
-        # 職種を取得または作成
+        """スタッフ登録APIの成功テスト"""
         role, _ = Role.objects.get_or_create(name="看護師")
         client.force_authenticate(user=admin_user)
         data = {"name": "山田太郎", "role_id": role.id, "user_id": admin_user.id}
@@ -42,8 +52,8 @@ class TestStaffView:
         assert response.data["data"]["name"] == "山田太郎"
 
     def test_get_staff_detail(self, admin_user):
+        """スタッフ詳細取得APIの成功テスト"""
         role, _ = Role.objects.get_or_create(name="看護師")
-        # スタッフに管理ユーザーを割り当てる
         staff = Staff.objects.create(name="テスト太郎", role=role, user=admin_user)
         client.force_authenticate(user=admin_user)
         response = client.get(f"/api/staff/staffs/{staff.id}/")
@@ -53,7 +63,12 @@ class TestStaffView:
 
 @pytest.mark.django_db
 class TestShiftTypeView:
+    """
+    ShiftType APIエンドポイントのテストクラス。
+    """
+
     def test_create_shift_type(self, admin_user):
+        """シフト種類登録APIの成功テスト"""
         data = {
             "code": "D",
             "name": "日勤",
@@ -63,7 +78,6 @@ class TestShiftTypeView:
             "color": "#FF0000",
         }
         client.force_authenticate(user=admin_user)
-        # 正しいURLへ修正
         response = client.post("/api/staff/shift-types/", data)
         assert response.status_code == 201
         assert response.data["message"] == "シフト種類を登録しました。"
@@ -71,7 +85,12 @@ class TestShiftTypeView:
 
 @pytest.mark.django_db
 class TestWorkScheduleView:
+    """
+    WorkSchedule APIエンドポイントのテストクラス。
+    """
+
     def test_create_schedule(self, admin_user):
+        """勤務シフト登録APIの成功テスト"""
         role, _ = Role.objects.get_or_create(name="介護士")
         staff = Staff.objects.create(name="テスト太郎", role=role, user=admin_user)
         shift = ShiftType.objects.create(
