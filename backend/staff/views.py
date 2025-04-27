@@ -15,51 +15,7 @@ from .serializers import (
     WorkScheduleSerializer,
 )
 from utils.api_response_utils import api_response
-
-
-# ================================================================
-# 夜勤シフト自動割り当て（3 連続：夜 -> 明け -> 休み）
-# ================================================================
-@extend_schema(
-    operation_id="AssignNightShift",
-    summary="夜勤シフトの自動割り当て",
-    description="指定スタッフに『夜勤→明け→休み』のシフトを 3 日連続で登録します。",
-    tags=["スタッフ管理"],
-    responses={
-        201: OpenApiResponse(description="夜勤シフト作成成功"),
-        400: OpenApiResponse(description="リクエストエラー"),
-    },
-)
-@api_view(["POST"])
-def assign_night_shift(request):
-    """夜勤→明け→休み の 3 連続シフトを自動登録するエンドポイント"""
-    try:
-        staff = Staff.objects.get(pk=request.data["staff_id"])
-        night_date = datetime.strptime(request.data["night_date"], "%Y-%m-%d").date()
-    except (KeyError, ValueError, Staff.DoesNotExist):
-        return Response(
-            {"error": "データが不正です"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # シフト種類を取得
-    shift_map = [
-        (0, ShiftType.objects.get(code="夜")),
-        (1, ShiftType.objects.get(code="明")),
-        (2, ShiftType.objects.get(code="休")),
-    ]
-
-    results = []
-    for offset, shift in shift_map:
-        target = night_date + timedelta(days=offset)
-        obj, created = WorkSchedule.objects.update_or_create(
-            staff=staff, date=target, defaults={"shift": shift}
-        )
-        results.append({"date": target, "shift": shift.code, "created": created})
-
-    return Response(
-        {"message": "夜勤シフト 3 日分を登録しました。", "schedule": results},
-        status=status.HTTP_201_CREATED,
-    )
+from staff.utils.shift_utils import assign_night_shift
 
 
 # ================================================================
@@ -191,7 +147,9 @@ class ShiftTypeListCreateView(APIView):
         ser = self.serializer_class(data=request.data)
         if ser.is_valid():
             ser.save()
-            return api_response(code=201, message="シフト種類を登録しました。", data=ser.data)
+            return api_response(
+                code=201, message="シフト種類を登録しました。", data=ser.data
+            )
         return api_response(code=400, message="バリデーションエラー", data=ser.errors)
 
 
@@ -347,7 +305,9 @@ class StaffDetailView(APIView):
 # WorkSchedule CRUD
 # ================================================================
 class WorkScheduleListCreateView(APIView):
-    """勤務シフト一覧・新規登録"""
+    """
+    勤務シフト一覧・新規登録
+    """
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     model = WorkSchedule
@@ -376,13 +336,29 @@ class WorkScheduleListCreateView(APIView):
     def post(self, request):
         ser = self.serializer_class(data=request.data)
         if ser.is_valid():
-            ser.save()
-            return api_response(code=201, message="勤務シフトを登録しました。", data=ser.data)
+            staff = ser.validated_data.get("staff")
+            shift = ser.validated_data.get("shift")
+            if shift.code == "夜":
+                # 夜勤の場合：夜→明→休 を3日分登録
+                results = assign_night_shift(
+                    staff_id=staff.id,
+                    base_date=ser.validated_data.get("date"),
+                )
+                return api_response(
+                    code=201, message="夜勤シフト3日分を登録しました。", data=results
+                )
+            else:
+                ser.save()
+                return api_response(
+                    code=201, message="勤務シフトを登録しました。", data=ser.data
+                )
         return api_response(code=400, message="バリデーションエラー", data=ser.errors)
 
 
 class WorkScheduleDetailView(APIView):
-    """勤務シフト詳細・更新・削除"""
+    """
+    勤務シフト詳細・更新・削除
+    """
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     model = WorkSchedule
@@ -418,8 +394,19 @@ class WorkScheduleDetailView(APIView):
         schedule = self.get_object(pk)
         ser = self.serializer_class(schedule, data=request.data)
         if ser.is_valid():
-            ser.save()
-            return api_response(message="更新成功", data=ser.data)
+            shift_id = ser.validated_data.get("shift_id")
+            shift = ShiftType.objects.get(id=shift_id)
+            if shift.code == "夜":
+                results = assign_night_shift(
+                    shift=ser.validated_data.get("shift"),
+                    base_date=ser.validated_data.get("date"),
+                )
+                return api_response(
+                    code=201, message="夜勤シフト3日分を登録しました。", data=results
+                )
+            else:
+                ser.save()
+                return api_response(message="更新成功", data=ser.data)
         return api_response(code=400, message="バリデーションエラー", data=ser.errors)
 
     @extend_schema(

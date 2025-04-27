@@ -1,7 +1,7 @@
 ﻿import pytest
 from rest_framework.test import APIClient
 from staff.models import Role, Staff, ShiftType, WorkSchedule
-from datetime import date, time
+from datetime import date
 
 client = APIClient()
 
@@ -11,10 +11,6 @@ class TestRoleView:
     """
     Role APIエンドポイントのテストクラス。
     """
-
-    def setup_method(self):
-        """テスト開始前に職種データをクリア"""
-        Role.objects.all().delete()
 
     def test_create_role(self, admin_user):
         """職種登録APIの成功テスト"""
@@ -37,10 +33,6 @@ class TestStaffView:
     """
     Staff APIエンドポイントのテストクラス。
     """
-
-    def setup_method(self):
-        """テスト開始前に職種データをクリア"""
-        Role.objects.all().delete()
 
     def test_create_staff(self, admin_user):
         """スタッフ登録APIの成功テスト"""
@@ -90,19 +82,47 @@ class TestWorkScheduleView:
     """
 
     def test_create_schedule(self, admin_user):
-        """勤務シフト登録APIの成功テスト"""
+        """
+        勤務シフト登録APIの成功テスト（通常シフト）
+        """
+        # 既存のShiftType（日1）を使う
+        shift = ShiftType.objects.get(code="日1")
+
         role, _ = Role.objects.get_or_create(name="介護士")
         staff = Staff.objects.create(name="テスト太郎", role=role, user=admin_user)
-        shift = ShiftType.objects.create(
-            code="A",
-            name="早番",
-            start_time=time(7),
-            end_time=time(15),
-            break_minutes=60,
-            color="#123456",
-        )
+
         data = {"staff_id": staff.id, "shift_id": shift.id, "date": str(date.today())}
         client.force_authenticate(user=admin_user)
         response = client.post("/api/staff/schedules/", data)
+        print("response.data:", response.data)
+
         assert response.status_code == 201
         assert response.data["message"] == "勤務シフトを登録しました。"
+
+    def test_create_night_shift_schedule(self, admin_user):
+        """
+        夜勤シフト登録APIの成功テスト（夜→明→休3日連続登録）
+        """
+        # 夜勤用ShiftTypeを確認・取得
+        night_shift = ShiftType.objects.get(code="夜")
+
+        role, _ = Role.objects.get_or_create(name="介護士")
+        staff = Staff.objects.create(name="テスト花子", role=role, user=admin_user)
+
+        client.force_authenticate(user=admin_user)
+        data = {
+            "staff_id": staff.id,
+            "shift_id": night_shift.id,
+            "date": str(date.today()),
+        }
+        response = client.post("/api/staff/schedules/", data)
+        print("response.data:", response.data)
+
+        assert response.status_code == 201
+        assert response.data["message"] == "夜勤シフト3日分を登録しました。"
+        assert len(response.data["data"]) == 3
+        assert response.data["data"][0]["shift"] == "夜"
+        assert response.data["data"][1]["shift"] == "明"
+        assert response.data["data"][2]["shift"] == "休"
+
+        assert WorkSchedule.objects.filter(staff=staff).count() == 3

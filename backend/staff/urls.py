@@ -36,7 +36,4 @@ urlpatterns = [
     path(
         "schedules/<int:pk>/", WorkScheduleDetailView.as_view(), name="schedule-detail"
     ),  # 勤務シフト詳細・更新・削除
-    path(
-        "assign-night-shift/", assign_night_shift, name="assign-night-shift"
-    ),  # 夜勤の自動割り当て
 ]

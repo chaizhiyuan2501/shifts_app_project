@@ -315,6 +315,7 @@ class VisitScheduleDetailView(APIView):
 
 class ScheduleUploadView(APIView):
     permission_classes = [IsAdminUser]
+    serializer_class = ScheduleUploadSerializer
 
     @extend_schema(
         operation_id="ScheduleUpload",
@@ -328,7 +329,7 @@ class ScheduleUploadView(APIView):
         },
     )
     def post(self, request, *args, **kwargs):
-        serializer = ScheduleUploadSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return api_response(
                 code=status.HTTP_400_BAD_REQUEST,
