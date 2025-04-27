@@ -49,5 +49,8 @@ TODO:2025/04/26
 ![◯] コメント追加
 
 TODO:2025/04/27
-![] assign_night_shift機能の利用
+![◯] assign_night_shift機能の利用
+![☓] MealOrderCountViewを1ヶ月の統計を計算するように編集
+
+TODO:2025/04/28
 ![] MealOrderCountViewを1ヶ月の統計を計算するように編集
