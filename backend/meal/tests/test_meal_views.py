@@ -239,3 +239,95 @@ class TestMealOrderAutoGenerateView:
         )
         assert res.status_code == 400
         assert res.data["message"] == "日付の形式が正しくありません（例: 2025-04-20）"
+
+
+@pytest.mark.django_db
+class TestMealOrderCountPeriodsView:
+    """
+    MealOrderCountPeriodsView のテストクラス。
+    複数期間にわたる食事注文集計APIの動作を検証する。
+    """
+
+    def setup_method(self):
+        """
+        テストデータを準備する。
+        - 管理者ユーザーを作成して認証する
+        - MealType（食事種類）を2つ作成する
+        - ゲストとスタッフを作成する
+        - MealOrder（食事注文）を数件作成する
+        """
+        self.client = APIClient()
+
+        # 管理者ユーザー作成・ログイン
+        self.admin_user = User.objects.create_superuser(name="admin", password="testpass123")
+        self.client.force_authenticate(user=self.admin_user)
+
+        # 食事種類を作成
+        self.meal_type1 = MealType.objects.create(name="lunch", display_name="昼食")
+        self.meal_type2 = MealType.objects.create(name="dinner", display_name="夕食")
+
+        # ゲストとスタッフを作成
+        self.guest = Guest.objects.create(name="ゲスト太郎")
+        self.staff = Staff.objects.create(user=self.admin_user, name="スタッフ花子")
+
+        # 今日と明日の食事注文データを作成
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+
+        MealOrder.objects.create(guest=self.guest, meal_type=self.meal_type1, date=today)
+        MealOrder.objects.create(guest=self.guest, meal_type=self.meal_type2, date=today)
+        MealOrder.objects.create(staff=self.staff, meal_type=self.meal_type1, date=tomorrow)
+
+    def test_count_periods_success(self):
+        """
+        正常系テスト：複数期間を指定して食事注文を正しく集計できること。
+        """
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+
+        url = reverse("mealorder-count-periods")
+        payload = {
+            "periods": [
+                {"start_date": today.strftime("%Y-%m-%d"), "end_date": today.strftime("%Y-%m-%d")},
+                {"start_date": tomorrow.strftime("%Y-%m-%d"), "end_date": tomorrow.strftime("%Y-%m-%d")}
+            ]
+        }
+
+        res = self.client.post(url, payload, format="json")
+
+        assert res.status_code == 200
+        assert res.data["code"] == 200
+        assert res.data["message"] == "集計成功"
+        assert len(res.data["data"]) == 2  # 2期間分のデータが返る
+
+    def test_count_periods_invalid_format(self):
+        """
+        異常系テスト：不正なリクエスト形式（periodsなし）に対してエラーが返ること。
+        """
+        url = reverse("mealorder-count-periods")
+        payload = {}  # periodsを省略
+
+        res = self.client.post(url, payload, format="json")
+
+        assert res.status_code == 400
+        assert res.data["code"] == 400
+        assert res.data["message"] == "periodsは必須で、リスト形式で指定してください"
+
+    def test_count_periods_invalid_date(self):
+        """
+        異常系テスト：日付フォーマットが間違っている場合にスキップされること。
+        """
+        url = reverse("mealorder-count-periods")
+        payload = {
+            "periods": [
+                {"start_date": "2025/04/01", "end_date": "2025/04/07"},  # 不正なフォーマット
+                {"start_date": "2025-04-15", "end_date": "2025-04-21"}
+            ]
+        }
+
+        res = self.client.post(url, payload, format="json")
+
+        assert res.status_code == 200
+        assert res.data["code"] == 200
+        assert res.data["message"] == "集計成功"
+        assert len(res.data["data"]) == 1  # 有効な1期間分だけ集計される

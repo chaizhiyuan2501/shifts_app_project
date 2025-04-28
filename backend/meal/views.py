@@ -280,6 +280,88 @@ class MealOrderCountView(APIView):
         )
 
 
+# ========================================
+# 複数期間の食事注文件数の集計API
+# ========================================
+
+class MealOrderCountPeriodsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    @extend_schema(
+        operation_id="MealOrderCountPeriods",
+        summary="複数期間の食事注文集計",
+        description="指定された複数の期間に対して、利用者・スタッフ別および合計の食事注文件数を集計します。",
+        tags=["食事管理"],
+        request={
+            "application/json": {
+                "example": {
+                    "periods": [
+                        {"start_date": "2025-04-01", "end_date": "2025-04-07"},
+                        {"start_date": "2025-04-15", "end_date": "2025-04-21"}
+                    ]
+                }
+            }
+        },
+        responses={200: OpenApiResponse(description="複数期間の食事注文集計成功")}
+    )
+    def post(self, request):
+        periods = request.data.get("periods")
+
+        if not periods or not isinstance(periods, list):
+            return api_response(code=400, message="periodsは必須で、リスト形式で指定してください")
+
+        # 食事種類マスタを取得（ID→表示名のマッピング）
+        meal_types = MealType.objects.values("id", "name", "display_name")
+        type_map = {m["id"]: m["display_name"] for m in meal_types}
+
+        results = []
+
+        for period in periods:
+            start_date = period.get("start_date")
+            end_date = period.get("end_date")
+
+            if not start_date or not end_date:
+                continue  # 無効な期間はスキップ
+
+            try:
+                start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            except ValueError:
+                continue  # 日付形式エラーはスキップ
+
+            # 利用者別集計
+            guest_counts = (
+                MealOrder.objects.filter(date__range=(start_date, end_date), guest__isnull=False)
+                .values("meal_type")
+                .annotate(count=Count("id"))
+            )
+
+            # スタッフ別集計
+            staff_counts = (
+                MealOrder.objects.filter(date__range=(start_date, end_date), staff__isnull=False)
+                .values("meal_type")
+                .annotate(count=Count("id"))
+            )
+
+            guest_result = {type_map.get(g["meal_type"], "不明"): g["count"] for g in guest_counts}
+            staff_result = {type_map.get(s["meal_type"], "不明"): s["count"] for s in staff_counts}
+
+            # 合計を作成
+            total_result = {}
+            for name in set(guest_result.keys()) | set(staff_result.keys()):
+                total_result[name] = guest_result.get(name, 0) + staff_result.get(name, 0)
+
+            results.append({
+                "period": {"start": start_date.strftime("%Y-%m-%d"), "end": end_date.strftime("%Y-%m-%d")},
+                "guest": guest_result,
+                "staff": staff_result,
+                "total": total_result,
+            })
+
+        return api_response(message="集計成功", data=results)
+
+
+
 class MealOrderAutoGenerateView(APIView):
     permission_classes = [IsAdminUser]
 
