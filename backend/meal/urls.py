@@ -6,6 +6,7 @@ from .views import (
     MealOrderDetailView,
     MealOrderCountView,
     MealOrderAutoGenerateView,
+    MealOrderCountPeriodsView,
 )
 
 app_name = "meal"
