@@ -144,3 +144,12 @@ class StaffMealOrderSerializer(serializers.ModelSerializer):
                 {"non_field_errors": ["既にこのスタッフの注文が存在します。"]}
             )
         return attrs
+
+
+class MealOrderGenerateSerializer(serializers.Serializer):
+    """
+    MealOrderAutoGenerateView 用のリクエストシリアライザー。
+    指定日付（date）のバリデーションを行う。
+    """
+
+    date = serializers.DateField(help_text="対象日（例：2025-04-28）")

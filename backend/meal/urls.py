@@ -53,6 +53,9 @@ urlpatterns = [
         name="meal-order-auto-generate",  # POST: 指定日付の食事注文を一括生成),
     ),
     # 期間を指定し、期間内の食事数をカウントAPI
-    path('meal-orders/count-periods/', MealOrderCountPeriodsView.as_view(), name='mealorder-count-periods'),
-
+    path(
+        "meal-orders/count-periods/",
+        MealOrderCountPeriodsView.as_view(),
+        name="mealorder-count-periods",
+    ),
 ]
