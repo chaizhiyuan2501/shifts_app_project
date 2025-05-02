@@ -6,11 +6,9 @@ from datetime import date, timedelta
 from django.urls import reverse
 
 from user.models import User
-from guest.models import Guest
-from staff.models import Staff
-from meal.models import MealType, MealOrder
 from guest.models import Guest, VisitSchedule, VisitType
 from staff.models import Staff, WorkSchedule, Role, ShiftType
+from meal.models import MealType, MealOrder
 
 
 @pytest.mark.django_db
@@ -362,21 +360,22 @@ class TestMealOrderCountPeriodsView:
 class TestMealOrderAutoGenerateView:
     """
     MealOrderAutoGenerateView の自動生成と集計処理のテスト。
-    ゲスト（泊・通）とスタッフ（日勤・夜勤）のシナリオで食事件数を検証する。
+    VisitSchedule/WorkScheduleの三餐チェックボックスに基づき、正しいMealOrderが作成されることを検証する。
     """
 
     def setup_method(self):
         User.objects.all().delete()
         self.client = APIClient()
+        User.objects.all().delete()
 
-        # 管理者ユーザー作成・認証
-        self.admin_user = User.objects.create_superuser(name="admin", password="pass")
-        self.client.force_authenticate(user=self.admin_user)
+        # 管理者作成
+        self.admin = User.objects.create_superuser(name="admin", password="pass")
+        self.client.force_authenticate(user=self.admin)
 
         # 対象日
         self.today = date(2025, 4, 28)
 
-        # 食事種類（朝・昼・夕）作成
+        # 食事タイプ
         self.breakfast, _ = MealType.objects.get_or_create(
             name="朝", defaults={"display_name": "朝食"}
         )
@@ -387,54 +386,37 @@ class TestMealOrderAutoGenerateView:
             name="夕", defaults={"display_name": "夕食"}
         )
 
-        # 訪問区分「泊」「通」作成
-        self.stay_type, _ = VisitType.objects.get_or_create(
+        # ゲストと訪問種別
+        visit_type, _ = VisitType.objects.get_or_create(
             code="泊", defaults={"name": "宿泊"}
         )
-        self.day_type, _ = VisitType.objects.get_or_create(
-            code="通", defaults={"name": "通い"}
-        )
-
-        # ゲスト作成
-        self.stay_guest1 = Guest.objects.create(name="泊まり1")
-        self.stay_guest2 = Guest.objects.create(name="泊まり2")
-        self.day_guest = Guest.objects.create(name="通いゲスト")
+        self.guest1 = Guest.objects.create(name="ゲスト1")
+        self.guest2 = Guest.objects.create(name="ゲスト2")
 
         VisitSchedule.objects.create(
-            guest=self.stay_guest1,
+            guest=self.guest1,
             date=self.today,
-            visit_type=self.stay_type,
+            visit_type=visit_type,
             arrive_time=time(10, 0),
             leave_time=time(18, 0),
+            needs_breakfast=True,
+            needs_lunch=False,
+            needs_dinner=True,
         )
         VisitSchedule.objects.create(
-            guest=self.stay_guest2,
+            guest=self.guest2,
             date=self.today,
-            visit_type=self.stay_type,
+            visit_type=visit_type,
             arrive_time=time(9, 0),
             leave_time=time(17, 0),
-        )
-        VisitSchedule.objects.create(
-            guest=self.day_guest,
-            date=self.today,
-            visit_type=self.day_type,
-            arrive_time=time(9, 30),
-            leave_time=time(14, 0),
+            needs_breakfast=True,
+            needs_lunch=True,
+            needs_dinner=False,
         )
 
-        # シフト（スタッフ）作成
-        role = Role.objects.create(name="介護士")
-        self.staff1_user = User.objects.create_user(name="daystaff", password="pass")
-        self.staff2_user = User.objects.create_user(name="nightstaff", password="pass")
-
-        self.staff1 = Staff.objects.create(
-            user=self.staff1_user, name="日勤スタッフ", role=role
-        )
-        self.staff2 = Staff.objects.create(
-            user=self.staff2_user, name="夜勤スタッフ", role=role
-        )
-
-        self.day_shift, _ = ShiftType.objects.get_or_create(
+        # スタッフとシフト
+        role, _ = Role.objects.get_or_create(name="介護士")
+        shift_day, _ = ShiftType.objects.get_or_create(
             code="日",
             defaults={
                 "name": "日勤",
@@ -443,27 +425,38 @@ class TestMealOrderAutoGenerateView:
                 "break_minutes": 60,
             },
         )
-        self.night_shift, _ = ShiftType.objects.get_or_create(
+        shift_night, _ = ShiftType.objects.get_or_create(
             code="夜",
             defaults={
                 "name": "夜勤",
-                "start_time": time(17, 0),
+                "start_time": time(18, 0),
                 "end_time": time(9, 0),
                 "break_minutes": 120,
             },
         )
 
+        user1 = User.objects.create_user(name="staff1", password="pass")
+        user2 = User.objects.create_user(name="staff2", password="pass")
+        self.staff1 = Staff.objects.create(user=user1, name="日勤スタッフ", role=role)
+        self.staff2 = Staff.objects.create(user=user2, name="夜勤スタッフ", role=role)
+
         WorkSchedule.objects.create(
-            staff=self.staff1, date=self.today, shift=self.day_shift
+            staff=self.staff1,
+            date=self.today,
+            shift=shift_day,
+            needs_lunch=True,
+            needs_dinner=False,
         )
         WorkSchedule.objects.create(
-            staff=self.staff2, date=self.today, shift=self.night_shift
+            staff=self.staff2,
+            date=self.today,
+            shift=shift_night,
+            needs_breakfast=False,
+            needs_lunch=False,
+            needs_dinner=True,
         )
 
-    def test_generate_meal_orders_and_count(self):
-        """
-        正常系テスト：泊まり2人・通い1人・日勤1人・夜勤1人 → 正しい件数が返る
-        """
+    def test_meal_order_generation_and_count(self):
         url = reverse("meal:meal-order-auto-generate")
         response = self.client.post(
             url, {"date": self.today.strftime("%Y-%m-%d")}, format="json"
@@ -472,10 +465,6 @@ class TestMealOrderAutoGenerateView:
         assert response.status_code == 200
         data = response.data["data"]
 
-        assert data["guest"] == {
-            "朝食": 2,
-            "昼食": 3,
-            "夕食": 2,
-        }  # 泊2人 * 3 + 通1人 * 昼
-        assert data["staff"] == {"昼食": 1, "夕食": 1}  # 日勤1人 昼、夜勤1人 夕
-        assert data["total"] == {"朝食": 2, "昼食": 4, "夕食": 3}
+        assert data["guest"] == {"朝食": 2, "昼食": 1, "夕食": 1}
+        assert data["staff"] == {"昼食": 1, "夕食": 1}
+        assert data["total"] == {"朝食": 2, "昼食": 2, "夕食": 2}

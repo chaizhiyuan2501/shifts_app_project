@@ -1,5 +1,6 @@
 ﻿from rest_framework import serializers
 from .models import Role, Staff, ShiftType, WorkSchedule
+
 from utils.date_utils import get_weekday_jp
 
 
@@ -97,6 +98,11 @@ class WorkScheduleSerializer(serializers.ModelSerializer):
     )
     # 曜日を日本語表記で返す
     weekday = serializers.SerializerMethodField()
+    needs_breakfast = serializers.BooleanField(required=False)
+    needs_lunch = serializers.BooleanField(required=False)
+    needs_dinner = serializers.BooleanField(required=False)
+    meal_note = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
 
     class Meta:
         model = WorkSchedule
@@ -109,6 +115,10 @@ class WorkScheduleSerializer(serializers.ModelSerializer):
             "date",
             "note",
             "weekday",
+            "needs_breakfast",
+            "needs_lunch",
+            "needs_dinner",
+            "meal_note",
         ]
 
     def get_weekday(self, obj):

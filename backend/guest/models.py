@@ -1,4 +1,6 @@
 from django.db import models
+
+from utils.model_utils import BaseNeedMeal
 from utils.date_utils import get_weekday_jp
 
 
@@ -39,7 +41,7 @@ class VisitType(models.Model):
         return f"{self.code}（{self.name}）"
 
 
-class VisitSchedule(models.Model):
+class VisitSchedule(BaseNeedMeal, models.Model):
     """
     来訪スケジュールモデル
     - 利用者と日付のユニーク制約あり（1人1日1件）

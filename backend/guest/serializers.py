@@ -84,6 +84,10 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
     guest = GuestSerializer(read_only=True)
     visit_type = VisitTypeSerializer(read_only=True)
     weekday = serializers.SerializerMethodField()
+    needs_breakfast = serializers.BooleanField(required=False)
+    needs_lunch = serializers.BooleanField(required=False)
+    needs_dinner = serializers.BooleanField(required=False)
+    meal_note = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = VisitSchedule
@@ -98,6 +102,10 @@ class VisitScheduleSerializer(serializers.ModelSerializer):
             "leave_time",
             "note",
             "weekday",
+            "needs_breakfast",
+            "needs_lunch",
+            "needs_dinner",
+            "meal_note",
         ]
 
     def get_weekday(self, obj):

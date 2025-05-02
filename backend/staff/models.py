@@ -3,6 +3,7 @@ from user.models import User
 from datetime import datetime, timedelta, date
 
 from utils.date_utils import get_weekday_jp, get_shift_period_range
+from utils.model_utils import BaseNeedMeal
 
 
 class Role(models.Model):
@@ -116,7 +117,7 @@ class ShiftType(models.Model):
         return duration
 
 
-class WorkSchedule(models.Model):
+class WorkSchedule(BaseNeedMeal,models.Model):
     """勤務シフト管理モデル（スタッフ毎・日毎のシフト情報）"""
 
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE, verbose_name="スタッフ")
