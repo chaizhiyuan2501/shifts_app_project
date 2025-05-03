@@ -19,9 +19,13 @@ class TestGuestAPIViews:
         - 管理者ユーザー、利用者、来所区分
         """
         self.client = APIClient()
-        self.admin = User.objects.create_superuser(name=unique_name("admin"), password="admin123")
+        self.admin = User.objects.create_superuser(
+            name=unique_name("admin"), password="admin123"
+        )
         self.guest = Guest.objects.create(name="テスト利用者", birthday="1970-01-01")
-        self.visit_type = VisitType.objects.create(code=unique_code("泊"), name="泊まり")
+        self.visit_type = VisitType.objects.create(
+            code=unique_code("泊"), name="泊まり"
+        )
 
     def test_guest_list(self):
         """
@@ -83,7 +87,9 @@ class TestVisitScheduleViews:
         self.client = APIClient()
         self.user = User.objects.create_user(name=unique_name("user"), password="1234")
         self.guest = Guest.objects.create(name="利用者", birthday="1988-08-08")
-        self.visit_type = VisitType.objects.create(code=unique_code("通い"), name="通い")
+        self.visit_type = VisitType.objects.create(
+            code=unique_code("通い"), name="通い"
+        )
         self.schedule = VisitSchedule.objects.create(
             guest=self.guest, visit_type=self.visit_type, date=date(2025, 4, 1)
         )
@@ -108,3 +114,25 @@ class TestVisitScheduleViews:
         res = self.client.get(f"/api/guest/schedules/{self.schedule.id}/")
         assert res.status_code == 200
         assert res.data["data"]["guest"]["name"] == self.guest.name
+
+    def test_create_visit_schedule_with_meals(self):
+        """
+        来所スケジュール登録API：三食フラグ付きの登録テスト
+        """
+        self.client.force_authenticate(user=self.user)
+        data = {
+            "guest_id": self.guest.id,
+            "visit_type_id": self.visit_type.id,
+            "date": "2025-04-10",
+            "arrive_time": "09:00",
+            "leave_time": "18:00",
+            "needs_breakfast": True,
+            "needs_lunch": False,
+            "needs_dinner": True,
+        }
+        res = self.client.post("/api/guest/schedules/", data)
+
+        assert res.status_code == 201
+        assert res.data["data"]["needs_breakfast"] is True
+        assert res.data["data"]["needs_lunch"] is False
+        assert res.data["data"]["needs_dinner"] is True

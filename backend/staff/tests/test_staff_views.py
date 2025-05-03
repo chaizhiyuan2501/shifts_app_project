@@ -126,3 +126,27 @@ class TestWorkScheduleView:
         assert response.data["data"][2]["shift"] == "休"
 
         assert WorkSchedule.objects.filter(staff=staff).count() == 3
+
+    def test_create_schedule_with_meals(self, admin_user):
+        """
+        勤務シフト登録API：三食フラグ付きの登録テスト
+        """
+        shift = ShiftType.objects.get(code="日1")
+        role, _ = Role.objects.get_or_create(name="介護士")
+        staff = Staff.objects.create(name="テスト太郎", role=role, user=admin_user)
+
+        data = {
+            "staff_id": staff.id,
+            "shift_id": shift.id,
+            "date": str(date.today()),
+            "needs_breakfast": True,
+            "needs_lunch": True,
+            "needs_dinner": False,
+        }
+        client.force_authenticate(user=admin_user)
+        response = client.post("/api/staff/schedules/", data)
+
+        assert response.status_code == 201
+        assert response.data["data"]["needs_breakfast"] is True
+        assert response.data["data"]["needs_lunch"] is True
+        assert response.data["data"]["needs_dinner"] is False
