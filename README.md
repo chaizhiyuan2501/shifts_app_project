@@ -73,13 +73,14 @@ http://localhost:8000/api/schema/swagger-ui/
   "name": "admin",
   "password": "your_password"
 }
+```
 
 ```レスポンス
 {
   "access": "xxxxx",
   "refresh": "yyyyy"
 }
-
+```
 
 ## ディレクトリ構成
 <pre>

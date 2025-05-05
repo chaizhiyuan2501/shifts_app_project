@@ -227,6 +227,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 
 # CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # 允许你前端开发地址
-#     "http://127.0.0.1:8000",  # 如果Swagger也是从这里加载的
+#     "http://localhost:3000", 
+#     "http://127.0.0.1:8000", 
 # ]
