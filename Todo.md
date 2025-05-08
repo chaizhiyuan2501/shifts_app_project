@@ -53,4 +53,10 @@ TODO:2025/04/27
 ![☓] MealOrderCountViewを1ヶ月の統計を計算するように編集
 
 TODO:2025/04/28
-![] MealOrderCountViewを1ヶ月の統計を計算するように編集
+![◯] MealOrderCountViewを1ヶ月の統計を計算するように編集
+
+TODO:2025/05/07
+![◯] フロントエンドVite + Vue3 プロジェクトを初期化
+
+TODO:2025/05/08
+![] フロントエンドの動作の確認

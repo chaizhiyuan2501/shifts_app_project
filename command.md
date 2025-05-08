@@ -22,6 +22,19 @@ python manage.py migrate
 
 ```
 
+```bash
+docker-compose run --rm frontend bash
+
+```
+
+```bash
+npm create vite@latest
+```
+
+npm install axios
+npm run dev
+
+
 #Swagger UI
 ```bash
 http://127.0.0.1:8000/api/docs/swagger/#/
