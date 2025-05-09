@@ -1,8 +1,9 @@
 ﻿import os
 
+
 def print_tree(startpath, prefix=""):
     for item in os.listdir(startpath):
-        if item == ".git" or item == "migrations":
+        if item == ".git" or item == "migrations" or item == "node_modules":
             continue  # 跳过 .git 目录
         path = os.path.join(startpath, item)
         if os.path.isdir(path):
@@ -10,5 +11,6 @@ def print_tree(startpath, prefix=""):
             print_tree(path, prefix + "│   ")
         else:
             print(prefix + "├── " + item)
+
 
 print_tree(".")

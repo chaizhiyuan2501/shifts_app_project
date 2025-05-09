@@ -5,10 +5,12 @@ FROM node:18
 WORKDIR /app
 
 
-# TODO: todo project作成後、コメントアウトを外す
-# COPY ./shifts_project/package*.json /app/shifts_project/
-# WORKDIR /app/shifts_project
-# RUN npm install
+# TODO: project作成後、コメントアウトを外す
+COPY ./shifts_project/package*.json /app/shifts_project/
+COPY package*.json ./
+WORKDIR /app/shifts_project
+RUN npm install
+
 
 # Viteの開発サーバーを起動
 CMD ["npm", "run", "dev"]
