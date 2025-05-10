@@ -62,4 +62,9 @@ TODO:2025/05/08
 ![△] フロントエンドの動作の確認
 
 TODO:2025/05/09
-![] TypeScriptに変更する
+![◯] TypeScriptに変更する
+
+
+TODO:2025/05/10
+![] RESTful APIのURI設計でurlを変更する
+
