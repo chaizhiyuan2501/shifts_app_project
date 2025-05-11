@@ -42,19 +42,19 @@ urlpatterns = [
     ),
     # 注文件数カウントAPI
     path(
-        "meal-order/count/",
+        "meal-orders/count/",
         MealOrderCountView.as_view(),
         name="meal-order-count",  # POST: 件数を集計して返す
     ),
     # 自動生成（泊の患者＋スタッフ）API
     path(
-        "meal-order/auto-generate/",
+        "meal-orders/auto-generate/",
         MealOrderAutoGenerateView.as_view(),
         name="meal-order-auto-generate",  # POST: 指定日付の食事注文を一括生成),
     ),
     # 期間を指定し、期間内の食事数をカウントAPI
     path(
-        "meal-orders/count-periods/",
+        "meal-orders/stats-periods/",
         MealOrderCountPeriodsView.as_view(),
         name="mealorder-count-periods",
     ),

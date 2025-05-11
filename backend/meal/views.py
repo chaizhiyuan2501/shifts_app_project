@@ -249,8 +249,8 @@ class MealOrderCountView(APIView):
         tags=["食事管理"],
         responses={200: OpenApiResponse(description="食事注文集計成功")},
     )
-    def post(self, request):
-        date = request.data.get("date")
+    def get(self, request):
+        date = request.query_params.get("date")
         if not date:
             return api_response(code=400, message="dateは必須です")
 
