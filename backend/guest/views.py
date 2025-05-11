@@ -318,9 +318,9 @@ class ScheduleUploadView(APIView):
     serializer_class = ScheduleUploadSerializer
 
     @extend_schema(
-        operation_id="ScheduleUpload",
-        summary="画像からスケジュール登録",
-        description="画像ファイルをOCR解析し、来訪スケジュールを自動登録します。",
+        operation_id="ScheduleUploadCreate",
+        summary="画像からスケジュールの一括登録",
+        description="画像ファイルをOCR解析し、スケジュール情報を一括登録します。",
         tags=["利用者管理"],
         request=ScheduleUploadSerializer,
         responses={
@@ -347,7 +347,7 @@ class ScheduleUploadView(APIView):
         result = processor.run()
 
         return api_response(
-            message=f"{result['count']}件の訪問スケジュールを保存しました。",
+            message=f"{result['count']}件の訪問スケジュールを登録しました。",
             data={
                 "guest": result["guest"],
                 "year": result["year"],

@@ -53,8 +53,8 @@ urlpatterns = [
     ),
     # OCR画像アップロード（スケジュール登録）
     path(
-        "schedules/upload/",
+        "schedule-uploads/",
         ScheduleUploadView.as_view(),
-        name="schedule-upload",  # POST: 画像から登録
+        name="schedule-upload",  # POST: OCRによるスケジュール一括登録
     ),
 ]
