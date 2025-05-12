@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import request from "../utils/request";
+import request from "@/utils/request";
 const name = ref("");
 const password = ref("");
 
