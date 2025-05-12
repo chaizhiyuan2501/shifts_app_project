@@ -2,14 +2,23 @@
 import { ElMessage } from 'element-plus'
 
 let request = axios.create({
-    baseURL: import.meta.env.APP_BASE_API,
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     timeout: 5000
 });
 
 
-request.interceptors.request.use((config) => {
-    return config;
-})
+request.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 
 request.interceptors.response.use((response) => {

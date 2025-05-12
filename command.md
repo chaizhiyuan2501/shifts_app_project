@@ -22,6 +22,14 @@ python manage.py migrate
 
 ```
 
+
+```bash
+python manage.py show_urls
+
+```
+
+
+
 ```bash
 docker-compose run --rm frontend bash
 
