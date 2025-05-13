@@ -1,14 +1,37 @@
-﻿import request from "@/utils/request";
+﻿
+export interface registerForm {
+    username: string,
+    email: string,
+    password: string,
+}
 
-export const API = {
-    USER_LOGIN_URL: "/user/login/",
-    USER_REGISTER_URL: "/user/register/",
-    USER_TOKEN_REFRESH_URL: "/user/token/refresh/",
-    USER_LIST_URL: "/user/users/",
-    USER_DETAIL_URL: "/user/users", // + /{id} 動的追加
-} as const;
+export interface loginForm {
+    username: string,
+    password: string,
+}
 
-export const reqUserLogin = (data: any) => request.post(API.USER_LOGIN_URL, data);
+interface dataType {
+    token: string
+}
 
-export const reqUserDetail = (id: number) =>
-    request.get(`${API.USER_DETAIL_URL}/${id}/`);
+export interface loginResponseData {
+    code: number,
+    data: dataType
+}
+
+interface user {
+    id: number,
+    name: string,
+    email: string,
+    is_staff: boolean,
+    is_active: boolean
+}
+
+export interface userResponseData {
+    code: number,
+    data: user
+}
+
+export interface UserDetail {
+
+}
