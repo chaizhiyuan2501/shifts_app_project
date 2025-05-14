@@ -1,37 +1,29 @@
-﻿
-export interface registerForm {
-    username: string,
-    email: string,
-    password: string,
+﻿// type.ts
+
+// ユーザーログイン用のリクエスト型
+export interface UserLoginRequest {
+    name: string;
+    password: string;
 }
 
-export interface loginForm {
-    username: string,
-    password: string,
+// ログイン成功時のレスポンス型（JWTトークン）
+export interface UserLoginResponse {
+    access: string;
+    refresh: string;
 }
 
-interface dataType {
-    token: string
+// ユーザー情報
+export interface User {
+    id: number;
+    name: string;
+    email?: string;
+    is_staff: boolean;
+    is_active: boolean;
 }
 
-export interface loginResponseData {
-    code: number,
-    data: dataType
-}
-
-interface user {
-    id: number,
-    name: string,
-    email: string,
-    is_staff: boolean,
-    is_active: boolean
-}
-
-export interface userResponseData {
-    code: number,
-    data: user
-}
-
-export interface UserDetail {
-
+// 新規登録用の型
+export interface UserRegisterRequest {
+    name: string;
+    email?: string;
+    password: string;
 }
