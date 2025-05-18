@@ -1,10 +1,9 @@
-﻿// index.ts
-import request from "@/utils/request";
-import type{
+﻿import request from "@/utils/request";
+import type {
   UserLoginRequest,
   UserLoginResponse,
   User,
-  UserRegisterRequest
+  UserRegisterRequest,
 } from "@/api/user/type";
 
 export const API = {
