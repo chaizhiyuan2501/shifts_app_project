@@ -41,9 +41,8 @@ services:
       - "5173:5173" # Vite 用ポート
     volumes:
       - ./frontend/shifts_project:/app
-      # - /app/node_modules # node_modules をコンテナ内に保持
-    depends_on:
-      - backend  # Django 起動後にフロントエンドを起動
+    # depends_on:
+    #   - backend  # Django 起動後にフロントエンドを起動
     # TODO: 下記の起動確認完了後、コメントアウトを外す
     command: >
       sh -c "npm install && npm run dev -- --host 0.0.0.0"

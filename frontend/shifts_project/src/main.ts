@@ -4,12 +4,12 @@ import ElementPlus from "element-plus"
 import "element-plus/dist/index.css"
 import router from './router'
 
-// import ja from "element-plus/dist/locale/ja.min.mjs.map"
+import ja from 'element-plus/es/locale/lang/ja'
 const app = createApp(App);
 
-// app.use(ElementPlus,{
-//     locale:ja
-// })
+app.use(ElementPlus, {
+    locale: ja
+})
 
 // import  GlobalComponent  from '@/components'
 

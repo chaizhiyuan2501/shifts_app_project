@@ -40,6 +40,7 @@ npm create vite@latest
 ```
 
 npm install axios
+npm install -D sass
 npm run dev
 
 
