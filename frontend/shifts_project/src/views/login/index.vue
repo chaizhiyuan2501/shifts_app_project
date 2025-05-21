@@ -25,7 +25,7 @@
 
                     <!-- ログインボタン -->
                     <el-form-item>
-                        <el-button class="login_btn" type="primary" size="default">
+                        <el-button class="login_btn" type="primary" size="default" @click="login">
                             ログイン
                         </el-button>
                     </el-form-item>
@@ -48,6 +48,10 @@ let loginForm = reactive({
     username: "test",  // 初期値を設定（テスト用）
     password: "pass"
 });
+
+const login = () => {
+    console.log("test");
+}
 </script>
 
 <style scoped lang="scss">
