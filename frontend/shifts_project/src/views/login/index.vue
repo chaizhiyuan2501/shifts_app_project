@@ -42,7 +42,10 @@
  */
 import { User, Lock } from "@element-plus/icons-vue";
 import { reactive } from "vue";
+import useUserStore from "@/store/modules/user"
 
+
+let useStore = useUserStore();
 // フォームの入力値（双方向バインディング用）
 let loginForm = reactive({
     username: "test",  // 初期値を設定（テスト用）
@@ -50,7 +53,7 @@ let loginForm = reactive({
 });
 
 const login = () => {
-    console.log("test");
+    useStore.userLogin(loginForm);
 }
 </script>
 

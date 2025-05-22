@@ -2,12 +2,15 @@
 export interface UserLoginRequest {
     name: string;
     password: string;
+    code: number;
 }
 
 // ログイン成功時のレスポンス型（JWTトークン + ユーザー情報）
 export interface UserLoginResponse {
     access: string;
     refresh: string;
+    code: number;
+    token: string;
     user: {
         id: number;
         name: string;
