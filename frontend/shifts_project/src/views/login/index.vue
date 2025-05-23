@@ -25,7 +25,7 @@
 
                     <!-- ログインボタン -->
                     <el-form-item>
-                        <el-button class="login_btn" type="primary" size="default" @click="login">
+                        <el-button :loading="loading" class="login_btn" type="primary" size="default" @click="login">
                             ログイン
                         </el-button>
                     </el-form-item>
@@ -41,19 +41,38 @@
  * Vue の reactive を使ってフォームのデータを定義
  */
 import { User, Lock } from "@element-plus/icons-vue";
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { ElNotification } from "element-plus";
 import useUserStore from "@/store/modules/user"
 
 
 let useStore = useUserStore();
+let $router = useRouter();
+let loading = ref(false);
 // フォームの入力値（双方向バインディング用）
 let loginForm = reactive({
     username: "test",  // 初期値を設定（テスト用）
     password: "pass"
 });
 
-const login = () => {
-    useStore.userLogin(loginForm);
+const login = async () => {
+    loading.value = true;
+    try {
+        await useStore.userLogin(loginForm);
+        $router.push("/");
+        ElNotification({
+            type: "success",
+            message: "ログイン成功"
+        });
+        loading.value = false;
+    } catch (error) {
+        loading.value = false;
+        ElNotification({
+            type: "error",
+            message: (error as Error).message
+        })
+    }
 }
 </script>
 
