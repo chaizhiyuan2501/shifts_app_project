@@ -1,4 +1,5 @@
-﻿export const constantRoute = [
+﻿// \src\router\routes.ts
+export const constantRoute = [
     {
         path: "/login",
         component: () => import("@/views/login/index.vue"),

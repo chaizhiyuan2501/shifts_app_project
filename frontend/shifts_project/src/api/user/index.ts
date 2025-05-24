@@ -16,7 +16,7 @@ export const API = {
 
 // ユーザーログイン
 export const reqUserLogin = (data: UserLoginRequest) =>
-  request.post<UserLoginResponse>(API.USER_LOGIN_URL, data);
+  request.post<any,UserLoginResponse>(API.USER_LOGIN_URL, data);
 
 // ユーザー一覧取得
 export const reqUserList = () =>

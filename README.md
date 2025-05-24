@@ -57,7 +57,7 @@ pytest
 
 ## APIドキュメント（Swagger）
 
-http://localhost:8000/api/schema/swagger-ui/
+http://127.0.0.1:8000/api/docs/swagger/#/
 
 ※ JWTトークンを用いて認証付きAPIも試せます
 

@@ -1,4 +1,5 @@
-﻿import axios from "axios";
+﻿// src/utils/request.ts
+import axios from "axios";
 import { ElMessage } from 'element-plus'
 
 let request = axios.create({

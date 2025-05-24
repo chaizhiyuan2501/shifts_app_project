@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- src/views/login/index.vue -->
+<template>
     <!-- ログイン画面全体のコンテナ -->
     <div class="login_container">
         <el-row>
@@ -14,7 +15,7 @@
 
                     <!-- ユーザー名の入力欄 -->
                     <el-form-item>
-                        <el-input :prefix-icon="User" v-model="loginForm.username"></el-input>
+                        <el-input :prefix-icon="User" v-model="loginForm.name"></el-input>
                     </el-form-item>
 
                     <!-- パスワードの入力欄 -->
@@ -52,14 +53,17 @@ let $router = useRouter();
 let loading = ref(false);
 // フォームの入力値（双方向バインディング用）
 let loginForm = reactive({
-    username: "test",  // 初期値を設定（テスト用）
+    name: "test",  // 初期値を設定（テスト用）
     password: "pass"
 });
 
 const login = async () => {
     loading.value = true;
     try {
-        await useStore.userLogin(loginForm);
+        await useStore.userLogin({
+            ...loginForm,
+            // code:0,
+        });
         $router.push("/");
         ElNotification({
             type: "success",

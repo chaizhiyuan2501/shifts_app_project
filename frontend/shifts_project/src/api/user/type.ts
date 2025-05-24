@@ -1,16 +1,20 @@
-﻿// ユーザーログイン用のリクエスト型
+﻿// src\api\user\type.ts
+// ユーザーログイン用のリクエスト型
 export interface UserLoginRequest {
     name: string;
     password: string;
-    code: number;
 }
 
+interface dataType {
+    token?: string;
+    message?: string;
+}
 // ログイン成功時のレスポンス型（JWTトークン + ユーザー情報）
 export interface UserLoginResponse {
+    code: number;
     access: string;
     refresh: string;
-    code: number;
-    token: string;
+    data: dataType;
     user: {
         id: number;
         name: string;
