@@ -8,18 +8,18 @@
 
             <!-- 右側のログインフォーム（モバイルでは全幅） -->
             <el-col :span="12" :xs="24">
-                <el-form class="login_form">
+                <el-form class="login_form" :model="loginForm" :rules="rules">
                     <!-- タイトル部分 -->
                     <h1>ようこそ!</h1>
                     <h2>タイトルへ</h2>
 
                     <!-- ユーザー名の入力欄 -->
-                    <el-form-item>
+                    <el-form-item prop="name">
                         <el-input :prefix-icon="User" v-model="loginForm.name"></el-input>
                     </el-form-item>
 
                     <!-- パスワードの入力欄 -->
-                    <el-form-item>
+                    <el-form-item prop="password">
                         <el-input type="password" v-model="loginForm.password" :prefix-icon="Lock"
                             show-password></el-input>
                     </el-form-item>
@@ -46,7 +46,7 @@ import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElNotification } from "element-plus";
 import useUserStore from "@/store/modules/user"
-
+import { getTime } from "@/utils/time";
 
 let useStore = useUserStore();
 let $router = useRouter();
@@ -67,7 +67,8 @@ const login = async () => {
         $router.push("/");
         ElNotification({
             type: "success",
-            message: "ログイン成功"
+            message: "ゲストさん",
+            title: `${(getTime())}!`
         });
         loading.value = false;
     } catch (error) {
@@ -77,6 +78,15 @@ const login = async () => {
             message: (error as Error).message
         })
     }
+}
+
+const rules = {
+    name: [
+        { required: true, min: 4, max: 20, message: "ユーザー名は最小4文字､最大は20文字まで", trigger: "change" },
+    ],
+    password: [
+        { required: true, min: 4, max: 20, message: "パスワードは最小4文字､最大は20文字まで", trigger: "change" },
+    ],
 }
 </script>
 
