@@ -1,7 +1,7 @@
 ﻿// src/store/modules/user.ts
 import { defineStore } from "pinia";
-import { reqUserLogin } from "@/api/user";
-import type { UserLoginRequest, UserLoginResponse } from "@/api/user/type";
+import { reqUserLogin,reqUserRegister } from "@/api/user";
+import type { UserLoginRequest, UserLoginResponse,UserRegisterRequest } from "@/api/user/type";
 import type { UserState } from "./type/type";
 import { SET_TOKEN, GET_TOKEN } from "@/utils/token";
 let useUserStore = defineStore("User", {
@@ -18,6 +18,14 @@ let useUserStore = defineStore("User", {
                 SET_TOKEN((result.access as string))
                 return "ok";
             } else {
+                return Promise.reject(new Error(result.data.message));
+            }
+        },
+        async userRegister(data:UserRegisterRequest){
+            let result:UserRegisterRequest = await reqUserRegister(data);
+            if (result.code == 200){
+                return ok;
+            }else{
                 return Promise.reject(new Error(result.data.message));
             }
         }
