@@ -8,7 +8,7 @@
 
             <!-- 右側のログインフォーム（モバイルでは全幅） -->
             <el-col :span="12" :xs="24">
-                <el-form class="login_form" :model="loginForm" :rules="rules">
+                <el-form class="login_form" :model="loginForm" :rules="rules" ref="loginForms">
                     <!-- タイトル部分 -->
                     <h1>ようこそ!</h1>
                     <h2>タイトルへ</h2>
@@ -51,6 +51,7 @@ import { getTime } from "@/utils/time";
 let useStore = useUserStore();
 let $router = useRouter();
 let loading = ref(false);
+let loginForms = ref()
 // フォームの入力値（双方向バインディング用）
 let loginForm = reactive({
     name: "test",  // 初期値を設定（テスト用）
@@ -58,6 +59,9 @@ let loginForm = reactive({
 });
 
 const login = async () => {
+    // 符合校验条件的情况下才能发送请求
+    await loginForms.value.validate();
+
     loading.value = true;
     try {
         await useStore.userLogin({
@@ -80,12 +84,30 @@ const login = async () => {
     }
 }
 
+const validatorName = (rule: any, value: any, callback: any) => {
+    if (value.length >= 4) {
+        callback();
+    } else {
+        callback(new Error("ユーザー名は最小4文字になります｡"))
+    }
+}
+
+const validatorPassword = (rule: any, value: any, callback: any) => {
+    if (value.length >= 4) {
+        callback();
+    } else {
+        callback(new Error("パスワードは最小4文字になります｡"))
+    }
+}
+
 const rules = {
     name: [
-        { required: true, min: 4, max: 20, message: "ユーザー名は最小4文字､最大は20文字まで", trigger: "change" },
+        // { required: true, min: 4, max: 20, message: "ユーザー名は最小4文字､最大は20文字まで", trigger: "change" },
+        { trigger: "change", validator: validatorName }
     ],
     password: [
-        { required: true, min: 4, max: 20, message: "パスワードは最小4文字､最大は20文字まで", trigger: "change" },
+        // { required: true, min: 4, max: 20, message: "パスワードは最小4文字､最大は20文字まで", trigger: "change" },
+        { trigger: "change", validator: validatorPassword }
     ],
 }
 </script>
