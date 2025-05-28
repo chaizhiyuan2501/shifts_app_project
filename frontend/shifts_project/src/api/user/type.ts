@@ -39,3 +39,16 @@ export interface UserRegisterRequest {
     password: string;
     is_staff?: boolean;
 }
+
+export interface UserRegisterResponse {
+    code: number;
+    access: string;
+    refresh: string;
+    data: dataType;
+    user: {
+        id: number;
+        name: string;
+        email: string | null;
+        is_staff: boolean;
+    };
+}

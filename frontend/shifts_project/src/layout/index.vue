@@ -24,10 +24,23 @@
     }
 
     .layout_tabbar {
+        position: fixed;
         width: calc(100% - $base-menu-width);
-        height: 100vh;
+        height: $base-tabbar-height;
+        background: cyan;
+        top: 0px;
+        left: $base-menu-width;
     }
 
-    .layout_main {}
+    .layout_main {
+        position: absolute;
+        width: calc(100% - $base-menu-width);
+        height: calc(100vh - $base-menu-width);
+        background-color: yellowgreen;
+        left: $base-menu-width;
+        top: $base-tabbar-height;
+        padding: 20px;
+        overflow: auto;
+    }
 }
 </style>

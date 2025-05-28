@@ -9,6 +9,7 @@
 
 ## 技術スタック
 
+### バックエンド
 - Python 3.11
 - Django 4.2
 - Django REST Framework
@@ -17,6 +18,13 @@
 - SQLite（ローカル開発用）
 - Docker / Docker Compose（開発・本番環境の構築用）
 
+### フロントエンド
+- Vue 3
+- TypeScript
+- Pinia（状態管理）
+- Vue Router
+- Axios
+- SCSS
 
 ## 主な機能
 

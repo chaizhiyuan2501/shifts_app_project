@@ -34,7 +34,6 @@ let useUserStore = defineStore("User", {
         }
     },
     getters: {
-        // ここに必要なgetterを追加可能
     }
 });
 
