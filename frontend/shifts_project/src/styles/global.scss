@@ -6,16 +6,20 @@ $base-menu-background-color: #001527;
 // トップナビゲーションバーの高さ
 $base-tabbar-height: 50px;
 
-::-webkit-scrollbar{
+::-webkit-scrollbar {
     width: 10px;
 }
 
-::-webkit-scrollbar-track{
+::-webkit-scrollbar-track {
     background: $base-menu-background-color;
 }
 
-::-webkit-scrollbar-thumb{
+::-webkit-scrollbar-thumb {
     width: 10px;
     background-color: yellowgreen;
     border-radius: 10px;
 }
+
+$base-menu-logo-height: 50px;
+
+$base-logo-title-fontSize: 20px;

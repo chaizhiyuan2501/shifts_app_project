@@ -1,7 +1,9 @@
 ﻿<template>
     <div class="layout_container">
         <!-- 左側サイドメニュー -->
-        <div class="layout_slider">左側サイドメニュー</div>
+        <div class="layout_slider">
+            <Logo></Logo>
+        </div>
         <!-- トップナビゲーションバー -->
         <div class="layout_tabbar">トップナビゲーション</div>
         <!-- コンテンツ表示エリア -->
@@ -9,7 +11,7 @@
     </div>
 </template>
 <script setup lang="ts">
-
+    import Logo from "./logo/index.vue"
 </script>
 <style scoped lang="scss">
 .layout_container {

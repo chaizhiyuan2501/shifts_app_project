@@ -1,3 +1,5 @@
 ﻿export default {
-    title: '出勤・食事・患者管理 API',
+    title: '介護士シフト・食事・訪問管理システム',
+    logo: "/public/logo.svg",
+    logoHidden: true,
 }
