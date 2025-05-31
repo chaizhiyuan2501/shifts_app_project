@@ -3,6 +3,20 @@
         <!-- 左側サイドメニュー -->
         <div class="layout_slider">
             <Logo></Logo>
+            <el-scrollbar class="scrollbar">
+                <el-menu background-color="#001529" text-color="white">
+                    <el-menu-item index="1">ホームページ1</el-menu-item>
+                    <el-menu-item index="2">ホームページ2</el-menu-item>
+                    <el-sub-menu index="3">
+                        <template #title>
+                            <span>ホームページ3</span>
+                        </template>
+                        <el-menu-item index="2-1">折りたたみ1</el-menu-item>
+                        <el-menu-item index="2-2">折りたたみ2</el-menu-item>
+                        <el-menu-item index="2-3">折りたたみ3</el-menu-item>
+                    </el-sub-menu>
+                </el-menu>
+            </el-scrollbar>
         </div>
         <!-- トップナビゲーションバー -->
         <div class="layout_tabbar">トップナビゲーション</div>
@@ -23,6 +37,10 @@
         width: $base-menu-width;
         height: 100vh;
         background: $base-menu-background-color;
+        .scrollbar{
+            width: 100%;
+            height:calc(100vh-$base-menu-logo-height);
+        }
     }
 
     .layout_tabbar {
