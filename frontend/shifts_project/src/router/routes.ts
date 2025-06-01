@@ -23,7 +23,13 @@ export const constantRoute = [
     {
         path: "/",
         component: () => import("@/layout/index.vue"),
-        name: "home"
+        name: "layout",
+        children:[
+            {
+                path:"/home",
+                component: () => import("@/views/home/index.vue"),
+            }
+        ]
     },
     {
         path: "/404",

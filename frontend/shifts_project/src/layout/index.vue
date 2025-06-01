@@ -5,16 +5,7 @@
             <Logo></Logo>
             <el-scrollbar class="scrollbar">
                 <el-menu background-color="#001529" text-color="white">
-                    <el-menu-item index="1">ホームページ1</el-menu-item>
-                    <el-menu-item index="2">ホームページ2</el-menu-item>
-                    <el-sub-menu index="3">
-                        <template #title>
-                            <span>ホームページ3</span>
-                        </template>
-                        <el-menu-item index="2-1">折りたたみ1</el-menu-item>
-                        <el-menu-item index="2-2">折りたたみ2</el-menu-item>
-                        <el-menu-item index="2-3">折りたたみ3</el-menu-item>
-                    </el-sub-menu>
+                    <Menu></Menu>
                 </el-menu>
             </el-scrollbar>
         </div>
@@ -25,7 +16,11 @@
     </div>
 </template>
 <script setup lang="ts">
-    import Logo from "./logo/index.vue"
+import Logo from "./logo/index.vue"
+import Menu from "./menu/index.vue"
+import useUserStore from "@/store/modules/user"
+
+let userStore = useUserStore();
 </script>
 <style scoped lang="scss">
 .layout_container {
@@ -37,9 +32,10 @@
         width: $base-menu-width;
         height: 100vh;
         background: $base-menu-background-color;
-        .scrollbar{
+
+        .scrollbar {
             width: 100%;
-            height:calc(100vh-$base-menu-logo-height);
+            height: calc(100vh-$base-menu-logo-height);
         }
     }
 

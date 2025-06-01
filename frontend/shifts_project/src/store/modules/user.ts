@@ -5,10 +5,13 @@ import type { UserLoginRequest, UserLoginResponse, UserRegisterRequest, UserRegi
 import type { UserState } from "./type/type";
 import { SET_TOKEN, GET_TOKEN } from "@/utils/token";
 
+import { constantRoute } from "@/router/routes";
+
 let useUserStore = defineStore("User", {
     state: (): UserState => {
         return {
-            token: GET_TOKEN()
+            token: GET_TOKEN(),
+            menuRoutes:constantRoute,
         }
     },
     actions: {
