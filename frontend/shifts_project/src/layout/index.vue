@@ -5,7 +5,7 @@
             <Logo></Logo>
             <el-scrollbar class="scrollbar">
                 <el-menu background-color="#001529" text-color="white">
-                    <Menu></Menu>
+                    <Menu :menuList="userStore.meRoutes"></Menu>
                 </el-menu>
             </el-scrollbar>
         </div>
